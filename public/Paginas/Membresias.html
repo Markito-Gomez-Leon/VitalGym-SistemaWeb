@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <title>VitalGym - Membresías</title>
+    <link rel="stylesheet" href="../CSS/style.css">
+    <script src="../JS/bucles.js"></script>
+  </head>
+  <body class="pagina-membresias">
+    <header class="encabezado-sitio">
+      <nav class="navegacion-principal">
+        <button class="btn-menu">☰</button>
+
+        <div class="nav-links" id="navLinks"></div> 
+
+        <button class="btn-login" id="btnLogin">Login</button>
+      </nav>
+    </header>
+    <div class="modal" id="ventanaLogin">
+      <div class="modal-contenido">
+        <span class="cerrar" id="cerrarLogin">&times;</span>
+        <h2>Iniciar sesión</h2>
+        <input type="text" placeholder="Correo o usuario" class="campo" id="usuarioCampo">
+        <input type="password" placeholder="Contraseña" class="campo" id="passwordCampo">
+        <button class="btn-entrar" id="btnEntrar">Entrar</button>
+        <h3>¿No tienes cuenta?</h3>
+        <button class="btn-registrarse" id="btnRegistrarse">Registrarse</button>
+      </div>
+    </div>
+    <div class="modal" id="ventanaRegistro">
+      <div class="modal-contenido">
+        <span class="cerrar" id="cerrarRegistro">&times;</span>
+        <h2>Crear cuenta</h2>
+        <input type="text" placeholder="Nombre completo" class="campo" id="nombreRegistro">
+        <input type="email" placeholder="Correo" class="campo" id="correoRegistro">
+        <input type="password" placeholder="Contraseña" class="campo" id="passwordCampo">
+        <button class="btn-registrar-final" id="btnRegistrarFinal">Registrarme</button>
+      </div>
+    </div>
+    <main class="contenido-membresias">
+      <h1>Planes de Membresía en VitalGym</h1>
+      <h2>Tipos de membresias</h2>
+      <div class="contenedor-planes">
+        <div class="tarjeta-plan">
+          <h3 class="nombre-plan">Plan Básico (1 Mes)</h3>
+          <p class="precio-plan">S/ 100 / mes</p>
+          <ul class="lista-beneficios">
+            <li>Entrenamientos 3 veces por día</li>
+            <li>Seguimiento y ayuda de alimentación</li>
+          </ul>
+          <button class="boton-inscripcion" onclick="alert('¡Excelente elección! Para adquirir este plan, primero debes crear tu cuenta en VitalGym.'); window.location.href='../index.html';">Inscríbete ahora</button>
+        </div>
+        <div class="tarjeta-plan">
+          <h3 class="nombre-plan">Plan Trimestral (Promo)</h3>
+          <p class="precio-plan">S/ 250 / 3 meses</p>
+          <ul class="lista-beneficios">
+            <li>Acceso a sede seleccionada</li>
+            <li>App con entrenamientos</li>
+          </ul>
+          <button class="boton-inscripcion" onclick="alert('¡Excelente elección! Para adquirir este plan, primero debes crear tu cuenta en VitalGym.'); window.location.href='../index.html';">Inscríbete ahora</button>
+        </div>
+        <div class="tarjeta-plan">
+          <h3 class="nombre-plan">Plan Anual (VIP)</h3>
+          <p class="precio-plan">S/ 900 / año</p>
+          <ul class="lista-beneficios">
+            <li>Acceso ilimitado a todas las sedes</li>
+            <li>Clases grupales incluidas</li>
+            <li>App con plan personalizado</li>
+            <li>Sillones de masaje</li>
+          </ul>
+          <button class="boton-inscripcion" onclick="alert('¡Excelente elección! Para adquirir este plan, primero debes crear tu cuenta en VitalGym.'); window.location.href='../index.html';">Inscríbete ahora</button>
+        </div>
+      </div>
+      <section class="tabla-descuentos">
+        <h2>Descuentos por membresia</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Plan</th>
+              <th>Precio mensual</th>
+              <th>3 meses (-5%)</th>
+              <th>6 meses (-10%)</th>
+              <th>12 meses (-15%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Básico</td>
+              <td>S/ 100</td>
+              <td>S/ 285</td>
+              <td>S/ 540</td>
+              <td>S/ 1020</td>
+            </tr>
+            <tr>
+              <td>Trimestral</td>
+              <td>S/ 100</td>
+              <td>S/ 250</td>
+              <td>S/ 540</td>
+              <td>S/ 1020</td>
+            </tr>
+            <tr>
+              <td>Anual</td>
+              <td>S/ 150</td>
+              <td>S/ 427.5</td>
+              <td>S/ 810</td>
+              <td>S/ 900</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+    <footer class="pie-pagina">
+      <div class="contenedor-redes">
+        <a href="https://www.instagram.com/vitalgymbolivar/" class="enlace-red">
+          <img src="../Imagenes/logoInstagram.png" alt="Instagram" class="icono-red">
+        </a>
+        <a href="https://www.facebook.com/vitalgymbolivar" class="enlace-red">
+          <img src="../Imagenes/logoFacebook.png" alt="Facebook" class="icono-red">
+        </a>
+        <a href="https://api.whatsapp.com/send?phone=51954751997" class="enlace-red">
+          <img src="../Imagenes/logoWhatsapp.png" alt="Whatsapp" class="icono-red">
+        </a>
+      </div>
+      <p class="derechos">&copy; 2025 VitalGym. Todos los derechos reservados.</p>
+    </footer>
+    <script src="../JS/main.js"></script>
+  </head>
+</html>

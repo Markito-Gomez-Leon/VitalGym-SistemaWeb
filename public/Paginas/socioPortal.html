@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Portal - VitalGym</title>
+    <link rel="stylesheet" href="../CSS/style.css">
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-image: url('../Imagenes/Fondo/abstractbg4.jpg'); background-size: cover; background-attachment: fixed; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* --- BARRA LATERAL (SIDEBAR) --- */
+        .sidebar { width: 250px; background-color: #111; color: white; display: flex; flex-direction: column; border-right: 2px solid #FFD700; z-index: 100; }
+        .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid #333; }
+        .sidebar-header h2 { color: white; margin: 0; font-size: 24px; }
+        .sidebar-header span { color: #FFD700; }
+        
+        .sidebar-menu { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .sidebar-menu li { border-bottom: 1px solid #222; }
+        .sidebar-menu a { display: block; padding: 20px; color: #ccc; text-decoration: none; font-weight: bold; transition: 0.3s; cursor: pointer; }
+        .sidebar-menu a:hover, .sidebar-menu a.activo { background-color: #FFD700; color: black; border-left: 5px solid white; }
+        
+        .sidebar-footer { padding: 20px; border-top: 1px solid #333; text-align: center; }
+        .sidebar-footer button { width: 100%; padding: 10px; background: transparent; color: #e74c3c; border: 1px solid #e74c3c; cursor: pointer; font-weight: bold; border-radius: 4px; transition: 0.3s; }
+        .sidebar-footer button:hover { background: #e74c3c; color: white; }
+
+        /* --- CONTENIDO PRINCIPAL --- */
+        .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; background: rgba(0,0,0,0.7); }
+        .panel { display: none; background: rgba(17, 17, 17, 0.95); padding: 30px; border-radius: 10px; color: white; border-top: 4px solid #FFD700; box-shadow: 0 5px 15px rgba(0,0,0,0.5); max-width: 600px; margin: 0 auto; }
+        .panel.activo { display: block; }
+        
+        .header-panel { border-bottom: 2px solid #FFD700; padding-bottom: 10px; margin-bottom: 20px; }
+        .header-panel h1 { color: #FFD700; margin: 0; }
+
+        /* --- FORMULARIOS Y ELEMENTOS --- */
+        .campo-grupo { margin-bottom: 15px; text-align: left; }
+        .campo-grupo label { display: block; margin-bottom: 5px; color: #FFD700; font-weight: bold; }
+        .campo-input { width: 100%; padding: 10px; box-sizing: border-box; background: #222; border: 1px solid #444; color: white; border-radius: 4px; font-size: 16px; }
+        
+        .estado-box { padding: 15px; border-radius: 6px; font-size: 18px; font-weight: bold; text-align: center; margin-bottom: 25px; }
+        .activo { background: rgba(39, 174, 96, 0.15); border: 1px solid #27ae60; color: #2ecc71; }
+        .vencido { background: rgba(231, 76, 60, 0.15); border: 1px solid #e74c3c; color: #e74c3c; }
+
+        .btn-accion { width: 100%; padding: 12px; font-size: 16px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; transition: 0.3s; }
+        .btn-guardar { background: #FFD700; color: black; }
+        .btn-guardar:hover { background: #e6c200; }
+        .btn-pagar { background: #27ae60; color: white; }
+        .btn-pagar:hover { background: #219150; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>VitalGym <span>Socio</span></h2>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a id="linkPerfil" class="activo" onclick="cambiarPanel('panelPerfil', 'linkPerfil')">👤 Mis Datos Personales</a></li>
+            <li><a id="linkMembresia" onclick="cambiarPanel('panelMembresia', 'linkMembresia')">💳 Mi Membresía y Pagos</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <button onclick="cerrarSesion()">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        
+        <section id="panelPerfil" class="panel activo">
+            <div class="header-panel">
+                <h1>Perfil del Socio</h1>
+            </div>
+            <form id="formPerfil">
+                <div class="campo-grupo">
+                    <label>Nombre Completo:</label>
+                    <input type="text" id="perfilNombre" class="campo-input" required>
+                </div>
+                <div class="campo-grupo">
+                    <label>Correo Electrónico:</label>
+                    <input type="email" id="perfilCorreo" class="campo-input" required readonly style="color: #888; background: #1a1a1a;">
+                </div>
+                <button type="submit" class="btn-accion btn-guardar">Actualizar Información</button>
+            </form>
+        </section>
+
+        <section id="panelMembresia" class="panel">
+            <div class="header-panel">
+                <h1>Estado de Membresía</h1>
+            </div>
+            
+            <div id="estadoMembresiaBox" class="estado-box">
+                Plan Actual: <span id="lblPlan">Ninguno</span><br>
+                <small id="lblVencimiento">Vence: --/--/----</small>
+            </div>
+
+            <div class="header-panel" style="border-top: 1px solid #333; padding-top: 20px; margin-top: 20px;">
+                <h2 style="color: #FFD700; margin: 0;">Simulador de Renovación</h2>
+            </div>
+            
+            <form id="formPagoSimulado">
+                <div class="campo-grupo">
+                    <label>Selecciona el Plan que deseas contratar:</label>
+                    <select id="selectPlanes" class="campo-input" required>
+                        <option value="">Cargando ofertas disponibles...</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-accion btn-pagar">💳 Confirmar Pago Simulado</button>
+            </form>
+
+            <div class="header-panel" style="border-top: 1px solid #333; padding-top: 20px; margin-top: 40px;">
+                <h2 style="color: #FFD700; margin: 0;">Mis Recibos de Pago</h2>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px; color: white;">
+                <thead>
+                    <tr>
+                        <th style="background:#FFD700; color:black; padding:10px; border: 1px solid #444;">Fecha</th>
+                        <th style="background:#FFD700; color:black; padding:10px; border: 1px solid #444;">Plan Adquirido</th>
+                        <th style="background:#FFD700; color:black; padding:10px; border: 1px solid #444;">Monto Pagado</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoHistorial">
+                    <tr><td colspan="3" style="text-align: center;">Cargando historial...</td></tr>
+                </tbody>
+            </table>
+
+        </section>
+
+    </main>
+
+    <script>
+        // --- 1. CONFIGURACIÓN DE NAVEGACIÓN INTERNA ---
+        function cambiarPanel(idPanel, idLink) {
+            // Se corrigió 'active' por 'activo'
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('activo'));
+            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('activo'));
+            
+            document.getElementById(idPanel).classList.add('activo');
+            document.getElementById(idLink).classList.add('activo');
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem("usuarioVitalGym");
+            window.location.href = "/";
+        }
+
+        // --- 2. INTEGRACIÓN CON EL BACKEND ---
+        const usuarioLocal = JSON.parse(localStorage.getItem("usuarioVitalGym"));
+        
+        if (!usuarioLocal || usuarioLocal.rol !== 'cliente') {
+            alert("Acceso denegado. Por favor, inicie sesión.");
+            window.location.href = "/";
+        }
+
+        // FUNCIÓN PRINCIPAL: CARGAR TODA LA INFORMACIÓN DEL SOCIO
+        const cargarDatosSocio = async () => {
+            try {
+                // A. Traer perfil del socio
+                const resPerfil = await fetch(`/api/socio/${usuarioLocal.id}`);
+                const datos = await resPerfil.json();
+
+                // Llenar panel de perfil
+                document.getElementById("perfilNombre").value = datos.nombre;
+                document.getElementById("perfilCorreo").value = datos.correo;
+
+                // Llenar panel de membresía
+                const lblPlan = document.getElementById("lblPlan");
+                const lblVencimiento = document.getElementById("lblVencimiento");
+                const box = document.getElementById("estadoMembresiaBox");
+
+                lblPlan.textContent = datos.plan_actual ? datos.plan_actual : "Sin Plan Activo";
+                
+                if (datos.fecha_vencimiento) {
+                    const vencimiento = new Date(datos.fecha_vencimiento);
+                    const hoy = new Date();
+                    lblVencimiento.textContent = `Vence el: ${vencimiento.toLocaleDateString('es-PE')}`;
+                    
+                    if (vencimiento >= hoy) {
+                        box.className = "estado-box activo";
+                    } else {
+                        box.className = "estado-box vencido";
+                    }
+                } else {
+                    lblVencimiento.textContent = "Realiza un pago para activar tu acceso.";
+                    box.className = "estado-box vencido";
+                }
+
+                // B. Traer las membresías de la BD para llenar el <select>
+                const resPlanes = await fetch('/api/socio/planes');
+                const planes = await resPlanes.json();
+                const select = document.getElementById("selectPlanes");
+                select.innerHTML = '<option value="">-- Elige una promoción --</option>';
+
+                planes.forEach(p => {
+                    select.innerHTML += `<option value="${p.id}">${p.nombre} - S/. ${p.precio} (${p.duracion_meses} Meses)</option>`;
+                });
+
+                // C. Traer el Historial de Pagos (¡ESTA ERA LA PARTE QUE BUSCÁBAMOS!)
+                const resHistorial = await fetch(`/api/socio/${usuarioLocal.id}/historial`);
+                const historial = await resHistorial.json();
+                const cuerpoHistorial = document.getElementById("cuerpoHistorial");
+                cuerpoHistorial.innerHTML = "";
+                
+                if (historial.length === 0) {
+                    cuerpoHistorial.innerHTML = "<tr><td colspan='3' style='text-align: center; padding: 15px;'>Aún no tienes pagos registrados.</td></tr>";
+                } else {
+                    historial.forEach(pago => {
+                        const fecha = new Date(pago.fecha_pago).toLocaleDateString('es-PE', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                        cuerpoHistorial.innerHTML += `
+                            <tr>
+                                <td style="border: 1px solid #444; padding: 10px;">${fecha}</td>
+                                <td style="border: 1px solid #444; padding: 10px;">${pago.plan}</td>
+                                <td style="border: 1px solid #444; padding: 10px; color: #27ae60; font-weight: bold; text-align: center;">S/. ${pago.monto}</td>
+                            </tr>
+                        `;
+                    });
+                }
+
+            } catch (error) {
+                console.error("Error al cargar el portal:", error);
+            }
+        };
+
+        // --- ACTUALIZAR PERFIL EN LA BASE DE DATOS (ARREGLADO) ---
+        document.getElementById("formPerfil").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const nuevoNombre = document.getElementById("perfilNombre").value;
+
+            try {
+                const response = await fetch(`/api/socio/${usuarioLocal.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre: nuevoNombre })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert(result.mensaje);
+                    usuarioLocal.nombre = nuevoNombre;
+                    localStorage.setItem("usuarioVitalGym", JSON.stringify(usuarioLocal));
+                } else {
+                    alert(result.mensaje);
+                }
+            } catch (error) {
+                alert("Error al intentar actualizar los datos.");
+            }
+        });
+
+        // --- ENVIAR PAGO SIMULADO AL BACKEND ---
+        document.getElementById("formPagoSimulado").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const membresia_id = document.getElementById("selectPlanes").value;
+
+            if (!membresia_id) return alert("Por favor, selecciona un plan.");
+
+            if (confirm("¿Estás de acuerdo con procesar la transacción de este plan de entrenamiento?")) {
+                try {
+                    const response = await fetch(`/api/socio/${usuarioLocal.id}/pagar`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ membresia_id })
+                    });
+
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert(result.mensaje);
+                        cargarDatosSocio(); // Recarga los datos y el historial en tiempo real
+                    } else {
+                        alert(result.mensaje);
+                    }
+                } catch (error) {
+                    alert("Error en la pasarela de pago.");
+                }
+            }
+        });
+
+        // Ejecutar al cargar la página
+        document.addEventListener("DOMContentLoaded", cargarDatosSocio);
+    </script>
+</body>
+</html>

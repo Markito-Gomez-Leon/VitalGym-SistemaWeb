@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+
+<html lang="es">
+	<head>
+		<meta charset="utf-8">
+		<title>VitalGym</title>
+		<link rel="stylesheet" href="CSS/style.css">
+		<script src="JS/bucles.js"></script>
+
+	</head>
+
+	<body>
+		<header class="encabezado-sitio">
+			<nav class="navegacion-principal">
+				<button class="btn-menu">☰</button>
+
+				<!-- Enlases de naveacion desde js -->
+				<div class="nav-links" id="navLinks"></div> 
+
+				<button class="btn-login" id="btnLogin">Login</button>
+			</nav>
+		</header>
+
+		<!-- Login -->
+		<div class="modal" id="ventanaLogin">
+            <div class="modal-contenido">
+                <span class="cerrar" id="cerrarLogin">&times;</span>
+                <h2>Iniciar sesión</h2>
+                
+                <form id="formLogin">
+                    <input type="text" name="correo" placeholder="Correo o usuario" class="campo" id="usuarioCampo" required>
+                    <input type="password" name="password" placeholder="Contraseña" class="campo" id="passwordCampo" required>
+
+                    <button type="submit" class="btn-entrar" id="btnEntrar">Entrar</button>
+                </form>
+
+                <h3>¿No tienes cuenta?</h3>
+                <button class="btn-registrarse" id="btnRegistrarse">Registrarse</button>
+            </div>
+        </div>
+
+		<!-- Registro -->
+		<div class="modal" id="ventanaRegistro">
+			<div class="modal-contenido">
+				<span class="cerrar" id="cerrarRegistro">&times;</span>
+				<h2>Crear cuenta</h2>
+
+				<input type="text" placeholder="Nombre completo" class="campo" id="nombreRegistro">
+				<input type="email" placeholder="Correo" class="campo" id="correoRegistro">
+				<input type="password" placeholder="Contraseña" class="campo" id="passwordRegistro">
+				<button class="btn-registrar-final" id="btnRegistrarFinal">Registrarme</button>
+			</div>
+		</div>
+
+
+		<main class="contenedor contenido-principal">
+
+			<section class="seccion-hero">
+				<video class="video-fondo" autoplay muted loop>
+					<source src="Imagenes/videoFondo.mp4" type="video/mp4">
+				</video>
+				<div class="texto-hero">
+					<h1 class="titulo-principal">VitalGym</h1>
+					<h2 class="subtitulo-principal">Pasión & Fitness</h2>
+				</div>
+			</section>
+
+			<section class="barra">
+				<marquee behavior="scroll" direction="left" class="texto-barra">
+					<span class="item-barra">Preparación física</span>
+					<span class="item-barra">Entrenamiento personalizado</span>
+					<span class="item-barra">Promociones</span>
+				</marquee>
+			</section>
+
+			<!-- Entrenadores -->
+			<section class="seccion-entrenadores">
+				<h2 class="titulo-seccion">Nuestros Entrenadores</h2>
+				<div class="rejilla-entrenadores" id="contenedorEntrenadores"></div>
+			</section>
+
+		</main>
+
+		<footer class="pie-pagina">
+			<div class="redes-sociales">
+				<a href="https://www.instagram.com/vitalgymbolivar/" class="enlace-red">
+					<img src="Imagenes/logoInstagram.png" alt="Instagram" class="icono-red">
+				</a>
+				<a href="https://www.facebook.com/vitalgymbolivar" class="enlace-red">
+					<img src="Imagenes/logoFacebook.png" alt="Facebook" class="icono-red">
+				</a>
+				<a href="https://api.whatsapp.com/send?phone=51954751997" class="enlace-red">
+					<img src="Imagenes/logoWhatsapp.png" alt="Whatsapp" class="icono-red">
+				</a>
+			</div>
+
+			<p class="derechos">&copy; 2025 VitalGym. Todos los derechos reservados.</p>
+		</footer>
+
+		<script src="JS/main.js"></script>
+	</body>
+</html>

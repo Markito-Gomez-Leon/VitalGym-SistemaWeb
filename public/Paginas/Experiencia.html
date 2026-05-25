@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <title>VitalGym - Experiencia</title>
+    <link rel="stylesheet" href="../CSS/style.css">
+    <script src="../JS/bucles.js"></script>
+  </head>
+
+  <body class="pagina-experiencia">
+    <header class="encabezado-sitio">
+			<nav class="navegacion-principal">
+				<button class="btn-menu">☰</button>
+
+				<div class="nav-links" id="navLinks"></div> 
+
+        <button class="btn-login" id="btnLogin">Login</button>
+			</nav>
+		</header>
+
+    <!-- Login -->
+		<div class="modal" id="ventanaLogin">
+			<div class="modal-contenido">
+				<span class="cerrar" id="cerrarLogin">&times;</span>
+				<h2>Iniciar sesión</h2>
+
+				<input type="text" placeholder="Correo o usuario" class="campo" id="usuarioCampo">
+				<input type="password" placeholder="Contraseña" class="campo" id="passwordCampo">
+
+				<button class="btn-entrar" id="btnEntrar">Entrar</button>
+
+				<h3>¿No tienes cuenta?</h3>
+				<button class="btn-registrarse" id="btnRegistrarse">Registrarse</button>
+			</div>
+		</div>
+
+		<!-- Registro -->
+		<div class="modal" id="ventanaRegistro">
+			<div class="modal-contenido">
+        <span class="cerrar" id="cerrarRegistro">&times;</span>
+        <h2>Crear cuenta</h2>
+
+        <input type="text" placeholder="Nombre completo" class="campo" id="nombreRegistro">
+        <input type="email" placeholder="Correo" class="campo" id="correoRegistro">
+        <input type="password" placeholder="Contraseña" class="campo" id="passwordCampo">
+
+        <button class="btn-registrar-final" id="btnRegistrarFinal">Registrarme</button>
+			</div>
+		</div>
+
+    <main class="contenido-experiencia">
+      <h1>Experiencia</h1>
+
+      <section class="seccion-trayectoria">
+        <h2 class="subtitulo">Años de Trayectoria</h2>
+        <p>
+          En <strong>VitalGym</strong> tenemos más de <b>10 años de experiencia</b>
+					ayudando a personas a alcanzar sus metas físicas y mentales.
+        </p>
+      </section>
+
+      <section class="seccion-logros">
+        <h2 class="subtitulo">Logros Alcanzados</h2>
+        <ul class="lista-logros">
+          <li>Más de 500 clientes transformaron su vida con nosotros.</li>
+          <li>Programas personalizados que garantizan resultados.</li>
+          <li>Participación en competencias y eventos fitness.</li>
+          <li>Comunidad activa que motiva a seguir avanzando.</li>
+        </ul>
+      </section>
+
+      <section class="seccion-testimonios">
+        <h2 class="subtitulo">Testimonios</h2>
+        <blockquote class="testimonio">
+          “Gracias a VitalGym logré perder 12 kg y ganar confianza en mí mismo.”
+          <cite>- Juan P.</cite>
+        </blockquote>
+        <blockquote class="testimonio">
+          “El ambiente es increíble, los entrenadores siempre están atentos a tus
+          progresos.”
+          <cite>- María G.</cite>
+        </blockquote>
+      </section>
+
+			<section class="seccion-reels">
+				<h2>Otros testimonios</h2>
+
+				<div class="contenedor-reels">
+					<iframe src="https://www.instagram.com/reel/DChXyCJJ7tg/embed" allowfullscreen loading="lazy"></iframe>
+
+					<iframe src="https://www.instagram.com/reel/DOLpFlFDY_J/embed" allowfullscreen loading="lazy"></iframe>
+
+					<iframe src="https://www.instagram.com/reel/DFnwUbiyCDl/embed" allowfullscreen loading="lazy"></iframe>
+				</div>
+			</section>
+    </main>
+
+    <footer class="pie-pagina">
+      <div class="contenedor-redes">
+        <a href="https://www.instagram.com/vitalgymbolivar/" class="enlace-red">
+          <img src="../Imagenes/logoInstagram.png" alt="Instagram" class="icono-red">
+        </a>
+        <a href="https://www.facebook.com/vitalgymbolivar" class="enlace-red">
+          <img src="../Imagenes/logoFacebook.png" alt="Facebook" class="icono-red">
+        </a>
+        <a href="https://api.whatsapp.com/send?phone=51954751997" class="enlace-red">
+          <img src="../Imagenes/logoWhatsapp.png" alt="Whatsapp" class="icono-red">
+        </a>
+      </div>
+
+      <p class="derechos">&copy; 2025 VitalGym. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="../JS/main.js"></script>
+  </body>
+</html>

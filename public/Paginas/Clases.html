@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <title>VitalGym - Clases</title>
+    <link rel="stylesheet" href="../CSS/style.css">
+    <script src="../JS/bucles.js"></script>
+  </head>
+
+  <body class="pagina-clases">
+    <header class="encabezado-sitio">
+			<nav class="navegacion-principal">
+				<button class="btn-menu">☰</button>
+
+				<div class="nav-links" id="navLinks"></div> 
+
+        <button class="btn-login" id="btnLogin">Login</button>
+			</nav>
+		</header>
+
+    <!-- Login -->
+		<div class="modal" id="ventanaLogin">
+			<div class="modal-contenido">
+				<span class="cerrar" id="cerrarLogin">&times;</span>
+				<h2>Iniciar sesión</h2>
+
+				<input type="text" placeholder="Correo o usuario" class="campo" id="usuarioCampo">
+				<input type="password" placeholder="Contraseña" class="campo" id="passwordCampo">
+
+				<button class="btn-entrar" id="btnEntrar">Entrar</button>
+
+				<h3>¿No tienes cuenta?</h3>
+				<button class="btn-registrarse" id="btnRegistrarse">Registrarse</button>
+			</div>
+		</div>
+
+		<!-- Registro -->
+		<div class="modal" id="ventanaRegistro">
+			<div class="modal-contenido">
+        <span class="cerrar" id="cerrarRegistro">&times;</span>
+        <h2>Crear cuenta</h2>
+
+        <input type="text" placeholder="Nombre completo" class="campo" id="nombreRegistro">
+        <input type="email" placeholder="Correo" class="campo" id="correoRegistro">
+        <input type="password" placeholder="Contraseña" class="campo" id="passwordCampo">
+
+        <button class="btn-registrar-final" id="btnRegistrarFinal">Registrarme</button>
+			</div>
+		</div>
+
+    <main class="contenido-horarios">
+      <h1>Nuestras clases</h1>
+      <h2>Horario semanal</h2>
+
+      <section class="tabla-horarios">
+        <table>
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Lunes</th>
+              <th>Martes</th>
+              <th>Miércoles</th>
+              <th>Jueves</th>
+              <th>Viernes</th>
+              <th>Sábado</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr>
+              <td>6:00 a.m.</td>
+              <td></td>
+              <td class="funcional-hit">Funcional HIT</td>
+              <td></td>
+              <td class="funcional-hit">Funcional HIT</td>
+              <td></td>
+              <td class="funcional-hit">Funcional HIT</td>
+            </tr>
+
+            <tr>
+              <td>7:00 a.m.</td>
+              <td class="funcional-hit">Funcional HIT</td>
+              <td class="baile-fusion-a">Baile Fusión</td>
+              <td class="funcional-hit">Funcional HIT</td>
+              <td class="baile-fusion-a">Baile Fusión</td>
+              <td class="funcional-hit">Funcional HIT</td>
+              <td class="funcional-circuit">Funcional Circuit</td>
+            </tr>
+
+            <tr>
+              <td>6:00 p.m.</td>
+              <td></td>
+              <td class="baile-fusion-b">Baile Fusión</td>
+              <td></td>
+              <td class="baile-fusion-b">Baile Fusión</td>
+              <td></td>
+              <td class="baile-fusion-b">Baile Fusión</td>
+            </tr>
+
+            <tr>
+              <td>8:00 p.m.</td>
+              <td class="funcional-circuit">Funcional Circuit</td>
+              <td></td>
+              <td class="funcional-circuit">Funcional Circuit</td>
+              <td></td>
+              <td class="funcional-circuit">Funcional Circuit</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+        <!-- Entrenadores -->
+        <section class="seccion-entrenadores">
+          <h2 class="titulo-seccion">Nuestros Entrenadores</h2>
+          <div class="rejilla-entrenadores" id="contenedorEntrenadores"></div>
+        </section>
+
+    </main>
+
+    <footer class="pie-pagina">
+      <div class="contenedor-redes">
+        <a href="https://www.instagram.com/vitalgymbolivar/" class="enlace-red">
+          <img src="../Imagenes/logoInstagram.png" alt="Instagram" class="icono-red">
+        </a>
+        <a href="https://www.facebook.com/vitalgymbolivar" class="enlace-red">
+          <img src="../Imagenes/logoFacebook.png" alt="Facebook" class="icono-red">
+        </a>
+        <a href="https://api.whatsapp.com/send?phone=51954751997" class="enlace-red">
+          <img src="../Imagenes/logoWhatsapp.png" alt="Whatsapp" class="icono-red">
+        </a>
+      </div>
+
+      <p class="derechos">&copy; 2025 VitalGym. Todos los derechos reservados.</p>
+    </footer>
+
+    <script src="../JS/main.js"></script>
+  </body>
+</html>

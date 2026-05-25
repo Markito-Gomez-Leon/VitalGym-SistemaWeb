@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Admin - VitalGym</title>
+    <link rel="stylesheet" href="../CSS/style.css">
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-image: url('../Imagenes/Fondo/abstractbg4.jpg'); background-size: cover; background-attachment: fixed; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* --- BARRA LATERAL (SIDEBAR) --- */
+        .sidebar { width: 250px; background-color: #111; color: white; display: flex; flex-direction: column; border-right: 2px solid #FFD700; z-index: 100; }
+        .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid #333; }
+        .sidebar-header h2 { color: white; margin: 0; font-size: 24px; }
+        .sidebar-header span { color: #FFD700; }
+        
+        .sidebar-menu { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .sidebar-menu li { border-bottom: 1px solid #222; }
+        .sidebar-menu a { display: block; padding: 20px; color: #ccc; text-decoration: none; font-weight: bold; transition: 0.3s; cursor: pointer; }
+        .sidebar-menu a:hover, .sidebar-menu a.activo { background-color: #FFD700; color: black; border-left: 5px solid white; }
+        
+        .sidebar-footer { padding: 20px; border-top: 1px solid #333; text-align: center; }
+        .sidebar-footer button { width: 100%; padding: 10px; background: transparent; color: #e74c3c; border: 1px solid #e74c3c; cursor: pointer; font-weight: bold; border-radius: 4px; transition: 0.3s; }
+        .sidebar-footer button:hover { background: #e74c3c; color: white; }
+
+        /* --- CONTENIDO PRINCIPAL --- */
+        .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; background: rgba(0,0,0,0.7); }
+        .panel { display: none; background: rgba(17, 17, 17, 0.95); padding: 30px; border-radius: 10px; color: white; border-top: 4px solid #FFD700; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .panel.activo { display: block; } /* Solo el panel activo se muestra */
+        
+        .header-panel { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header-panel h1 { color: #FFD700; margin: 0; }
+        
+        /* --- TABLAS Y BOTONES --- */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #444; padding: 12px; text-align: left; color: white; }
+        th { background-color: #FFD700; color: black; font-weight: bold; }
+        tr:nth-child(even) { background-color: rgba(255, 255, 255, 0.05); }
+        
+        .btn-accion { padding: 8px 12px; cursor: pointer; border: none; font-weight: bold; border-radius: 4px; margin-right: 5px; }
+        .btn-editar { background: #FFD700; color: black; }
+        .btn-borrar { background: #e74c3c; color: white; }
+        .btn-nuevo { background: #27ae60; color: white; padding: 10px 15px; font-size: 16px; border: none; cursor: pointer; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>VitalGym <span>Admin</span></h2>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a id="linkClientes" class="activo" onclick="cambiarPanel('panelClientes', 'linkClientes')">👥 Gestión de Clientes</a></li>
+            <li><a id="linkMembresias" onclick="cambiarPanel('panelMembresias', 'linkMembresias')">🏷️ Promociones y Planes</a></li>
+        </ul>
+        <div class="sidebar-footer">
+            <button onclick="cerrarSesion()">Cerrar Sesión</button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        
+        <section id="panelClientes" class="panel activo">
+            <div class="header-panel">
+                <h1>Gestión de Clientes</h1>
+                <div style="font-size: 18px; font-weight: bold;">Total: <span id="contadorClientes">0</span></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <button class="btn-nuevo" onclick="document.getElementById('modalNuevoCliente').style.display='flex'">+ Ingresar Nuevo Cliente</button>
+                
+                <div style="position: relative; width: 300px;">
+                    <span style="position: absolute; left: 10px; top: 10px; font-size: 16px;">🔍</span>
+                    <input type="text" id="buscadorClientes" placeholder="Buscar por nombre..." style="width: 100%; padding: 10px 10px 10px 35px; box-sizing: border-box; background: #222; border: 1px solid #FFD700; color: white; border-radius: 4px; font-size: 14px;">
+                </div>
+            </div>            
+            <table id="tablaClientes">
+                <thead>
+                    <tr><th>ID</th><th>Nombre Completo</th><th>Inicio (Registro)</th><th>Meses</th><th>Vencimiento</th><th>Acciones</th></tr>
+                </thead>
+                <tbody id="cuerpoTablaClientes">
+                    <tr><td colspan="6" style="text-align: center;">Cargando clientes...</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="panelMembresias" class="panel">
+            <div class="header-panel">
+                <h1>Membresías y Promociones</h1>
+            </div>
+            <button class="btn-nuevo" onclick="document.getElementById('modalMembresia').style.display='flex'">+ Nueva Membresía / Oferta</button>            <table id="tablaMembresias">
+                <thead>
+                    <tr><th>ID</th><th>Nombre del Plan</th><th>Costo (S/.)</th><th>Duración (Meses)</th><th>Estado</th><th>Acciones</th></tr>
+                </thead>
+                <tbody id="cuerpoTablaMembresias">
+                    <tr><td colspan="6" style="text-align: center;">Cargando membresías...</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <div id="modalNuevoCliente" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;">
+        <div style="background: #111; padding: 30px; border-radius: 8px; width: 400px; border: 2px solid #FFD700; color: white;">
+            <h2 style="color: #FFD700; margin-top: 0;">Registrar Alumno</h2>
+            <form id="formNuevoCliente">
+                <input type="text" id="nuevoNombre" placeholder="Nombre completo" required style="width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box; background: #222; border: 1px solid #555; color: white;">
+                <input type="email" id="nuevoCorreo" placeholder="Correo electrónico" required style="width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box; background: #222; border: 1px solid #555; color: white;">
+                <input type="text" id="nuevaPassword" placeholder="Contraseña temporal" required style="width: 100%; padding: 10px; margin-bottom: 20px; box-sizing: border-box; background: #222; border: 1px solid #555; color: white;">
+                <div style="display: flex; justify-content: space-between;">
+                    <button type="button" onclick="document.getElementById('modalNuevoCliente').style.display='none'" style="background: #555; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Cancelar</button>
+                    <button type="submit" style="background: #27ae60; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Guardar Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalMembresia" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;">
+        <div style="background: #111; padding: 30px; border-radius: 8px; width: 400px; border: 2px solid #FFD700; color: white;">
+            <h2 style="color: #FFD700; margin-top: 0;">Nueva Oferta / Plan</h2>
+            <form id="formMembresia">
+                <input type="text" id="memNombre" placeholder="Nombre (ej. Plan Verano)" required style="width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box; background: #222; border: 1px solid #555; color: white;">
+                <input type="number" id="memPrecio" step="0.01" placeholder="Costo en S/. (ej. 150.00)" required style="width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box; background: #222; border: 1px solid #555; color: white;">
+                <input type="number" id="memDuracion" placeholder="Duración en meses (ej. 3)" required style="width: 100%; padding: 10px; margin-bottom: 20px; box-sizing: border-box; background: #222; border: 1px solid #555; color: white;">
+                
+                <div style="display: flex; justify-content: space-between;">
+                    <button type="button" onclick="document.getElementById('modalMembresia').style.display='none'" style="background: #555; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer;">Cancelar</button>
+                    <button type="submit" style="background: #27ae60; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Guardar Oferta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. LÓGICA DE NAVEGACIÓN (SIDEBAR) ---
+        function cambiarPanel(idPanel, idLink) {
+            // Ocultar todos los paneles
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('activo'));
+            // Quitar clase activo de todos los links
+            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('activo'));
+            
+            // Mostrar el seleccionado
+            document.getElementById(idPanel).classList.add('activo');
+            document.getElementById(idLink).classList.add('activo');
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem("usuarioVitalGym");
+            window.location.href = "/";
+        }
+
+        // --- 2. RECUPERAR DATOS AL CARGAR ---
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Verificamos sesión
+            const usuarioLocal = JSON.parse(localStorage.getItem("usuarioVitalGym"));
+            if (!usuarioLocal || usuarioLocal.rol !== 'admin') {
+                window.location.href = "/"; return;
+            }
+
+            // Cargar Clientes
+            try {
+                const response = await fetch('/api/admin/clientes');
+                const clientes = await response.json();
+                const cuerpo = document.getElementById("cuerpoTablaClientes");
+                document.getElementById("contadorClientes").textContent = clientes.length;
+                cuerpo.innerHTML = "";
+
+                clientes.forEach(cliente => {
+                    const fechaInicio = new Date(cliente.fecha_registro);
+                    const fechaVencimiento = cliente.fecha_vencimiento ? new Date(cliente.fecha_vencimiento).toLocaleDateString('es-PE') : 'Sin plan';
+                    let meses = (new Date().getFullYear() - fechaInicio.getFullYear()) * 12 + (new Date().getMonth() - fechaInicio.getMonth());
+                    if (meses === 0) meses = "Nuevo";
+
+                    // AQUÍ ESTÁ LA MAGIA DEL BOTÓN BORRAR RECONECTADO
+                    cuerpo.innerHTML += `
+                        <tr>
+                            <td>${cliente.id}</td><td>${cliente.nombre}</td><td>${fechaInicio.toLocaleDateString('es-PE')}</td>
+                            <td style="text-align:center"><b>${meses}</b></td>
+                            <td style="color: ${cliente.fecha_vencimiento ? '#27ae60' : '#e74c3c'};"><b>${fechaVencimiento}</b></td>
+                            <td><button class="btn-accion btn-borrar" onclick="borrarCliente(${cliente.id}, '${cliente.nombre}')">Borrar</button></td>
+                        </tr>`;
+                });
+            } catch (e) { console.error("Error clientes", e); }
+        }); // FIN DEL DOMContentLoaded
+
+
+        // --- 3. LÓGICA DE CLIENTES (GUARDAR Y BORRAR) ---
+        
+        // A. Guardar un nuevo cliente desde el formulario
+        document.getElementById("formNuevoCliente").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById("nuevoNombre").value;
+            const correo = document.getElementById("nuevoCorreo").value;
+            const password = document.getElementById("nuevaPassword").value;
+
+            try {
+                const response = await fetch('/api/admin/clientes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, correo, password })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.mensaje);
+                    document.getElementById('modalNuevoCliente').style.display = "none";
+                    document.getElementById("formNuevoCliente").reset();
+                    window.location.reload(); // Recargamos para ver al nuevo cliente
+                } else { alert(result.mensaje); }
+            } catch (error) { console.error(error); }
+        });
+
+        // B. Función real para borrar un cliente
+        window.borrarCliente = async (id, nombre) => {
+            if(confirm(`¿Estás seguro de que deseas eliminar permanentemente a ${nombre}?`)) {
+                try {
+                    const response = await fetch(`/api/admin/clientes/${id}`, { method: 'DELETE' });
+                    if (response.ok) {
+                        alert("Cliente eliminado.");
+                        window.location.reload(); // Recargamos para que desaparezca
+                    }
+                } catch (error) { console.error(error); }
+            }
+        };
+        // --- CARGAR MEMBRESÍAS ---
+        const cargarMembresias = async () => {
+                try {
+                    const response = await fetch('/api/admin/membresias');
+                    const membresias = await response.json();
+                    const cuerpo = document.getElementById("cuerpoTablaMembresias");
+                    cuerpo.innerHTML = "";
+
+                    if (membresias.length === 0) {
+                        cuerpo.innerHTML = "<tr><td colspan='6' style='text-align: center;'>No hay membresías registradas.</td></tr>";
+                        return;
+                    }
+
+                    membresias.forEach(mem => {
+                        cuerpo.innerHTML += `
+                            <tr>
+                                <td>${mem.id}</td>
+                                <td>${mem.nombre}</td>
+                                <td><b>S/. ${mem.precio}</b></td>
+                                <td style="text-align:center">${mem.duracion_meses} Meses</td>
+                                <td style="color: #27ae60; font-weight: bold; text-transform: capitalize;">${mem.estado}</td>
+                                <td>
+                                    <button class="btn-accion btn-borrar" onclick="borrarMembresia(${mem.id}, '${mem.nombre}')">Borrar</button>
+                                </td>
+                            </tr>`;
+                    });
+                } catch (e) { console.error(e); }
+            };
+            cargarMembresias(); // Llamamos a la función al iniciar
+
+            // --- CREAR NUEVA MEMBRESÍA ---
+            document.getElementById("formMembresia").addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const nombre = document.getElementById("memNombre").value;
+                const precio = document.getElementById("memPrecio").value;
+                const duracion_meses = document.getElementById("memDuracion").value;
+
+                try {
+                    const response = await fetch('/api/admin/membresias', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nombre, precio, duracion_meses })
+                    });
+                    if (response.ok) {
+                        alert("¡Membresía guardada con éxito!");
+                        document.getElementById('modalMembresia').style.display = 'none';
+                        document.getElementById("formMembresia").reset();
+                        cargarMembresias(); // Recargar tabla
+                    }
+                } catch (error) { alert("Error al guardar"); }
+            });
+
+            // --- BORRAR MEMBRESÍA (Hacemos la función global) ---
+            window.borrarMembresia = async (id, nombre) => {
+                if(confirm(`¿Seguro que deseas borrar el plan "${nombre}"?`)) {
+                    await fetch(`/api/admin/membresias/${id}`, { method: 'DELETE' });
+                    cargarMembresias(); // Recargar tabla
+                }
+            };
+            // --- BUSCADOR EN TIEMPO REAL ---
+        document.getElementById("buscadorClientes").addEventListener("keyup", function() {
+            const filtro = this.value.toLowerCase();
+            const filas = document.querySelectorAll("#cuerpoTablaClientes tr");
+
+            filas.forEach(fila => {
+                const celdaNombre = fila.getElementsByTagName("td")[1];
+                
+                if (celdaNombre) {
+                    const textoNombre = celdaNombre.textContent || celdaNombre.innerText;
+                    
+                    // CORRECCIÓN AQUÍ: Ahora sí dice 'filtro' correctamente
+                    if (textoNombre.toLowerCase().indexOf(filtro) > -1) {
+                        fila.style.display = "";
+                    } else {
+                        fila.style.display = "none";
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
