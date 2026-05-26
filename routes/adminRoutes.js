@@ -12,5 +12,6 @@ router.post('/clientes', adminController.crearCliente);
 router.get('/membresias', adminController.listarMembresias);
 router.post('/membresias', adminController.crearMembresia);
 router.delete('/membresias/:id', adminController.borrarMembresia);
+router.get('/pagos', adminController.obtenerTodosLosPagos);
 
 module.exports = router;

@@ -51,6 +51,7 @@
         <ul class="sidebar-menu">
             <li><a id="linkClientes" class="activo" onclick="cambiarPanel('panelClientes', 'linkClientes')">👥 Gestión de Clientes</a></li>
             <li><a id="linkMembresias" onclick="cambiarPanel('panelMembresias', 'linkMembresias')">🏷️ Promociones y Planes</a></li>
+            <li><a id="linkPagos" onclick="cambiarPanel('panelPagos', 'linkPagos')">💰 Historial de Pagos</a></li>
         </ul>
         <div class="sidebar-footer">
             <button onclick="cerrarSesion()">Cerrar Sesión</button>
@@ -95,11 +96,30 @@
                 </tbody>
             </table>
         </section>
+
+        <section id="panelPagos" class="panel">
+            <div class="header-panel">
+                <h1>Historial de Pagos (Caja Global)</h1>
+            </div>
+            <table id="tablaPagosGlobales">
+                <thead>
+                    <tr>
+                        <th>Fecha y Hora</th>
+                        <th>Socio</th>
+                        <th>Plan Adquirido</th>
+                        <th>Monto Ingresado</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpoTablaPagos">
+                    <tr><td colspan="4" style="text-align: center;">Cargando historial de pagos...</td></tr>
+                </tbody>
+            </table>
+        </section>
     </main>
 
     <div id="modalNuevoCliente" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;">
         <div style="background: #111; padding: 30px; border-radius: 8px; width: 400px; border: 2px solid #FFD700; color: white;">
-            <h2 style="color: #FFD700; margin-top: 0;">Registrar Alumno</h2>
+            <h2 style="color: #FFD700; margin-top: 0;">Registrar cliente</h2>
             <form id="formNuevoCliente">
                 <input type="text" id="nuevoNombre" placeholder="Nombre completo" required style="width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box; background: #222; border: 1px solid #555; color: white;">
                 <input type="email" id="nuevoCorreo" placeholder="Correo electrónico" required style="width: 100%; padding: 10px; margin-bottom: 15px; box-sizing: border-box; background: #222; border: 1px solid #555; color: white;">
@@ -127,16 +147,11 @@
             </form>
         </div>
     </div>
-
     <script>
         // --- 1. LÓGICA DE NAVEGACIÓN (SIDEBAR) ---
         function cambiarPanel(idPanel, idLink) {
-            // Ocultar todos los paneles
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('activo'));
-            // Quitar clase activo de todos los links
             document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('activo'));
-            
-            // Mostrar el seleccionado
             document.getElementById(idPanel).classList.add('activo');
             document.getElementById(idLink).classList.add('activo');
         }
@@ -146,13 +161,115 @@
             window.location.href = "/";
         }
 
-        // --- 2. RECUPERAR DATOS AL CARGAR ---
+        // --- 2. FUNCIONES GLOBALES (BOTONES EN TABLAS) ---
+        window.borrarCliente = async (id, nombre) => {
+            if(confirm(`¿Estás seguro de que deseas eliminar permanentemente a ${nombre}?`)) {
+                try {
+                    const response = await fetch(`/api/admin/clientes/${id}`, { method: 'DELETE' });
+                    if (response.ok) {
+                        alert("Cliente eliminado.");
+                        window.location.reload();
+                    }
+                } catch (error) { console.error(error); }
+            }
+        };
+
+        window.desactivarMembresia = async (id, nombre) => {
+            if(confirm(`¿Seguro que deseas DESACTIVAR el plan "${nombre}"? Los socios actuales no lo perderán, pero ya no se venderá más.`)) {
+                try {
+                    const response = await fetch(`/api/admin/membresias/${id}`, { method: 'DELETE' }); 
+                    if (response.ok) {
+                        alert("Plan desactivado correctamente.");
+                        cargarMembresias(); 
+                    }
+                } catch (error) { console.error(error); }
+            }
+        };
+
+        // --- 3. FUNCIONES DE CARGA DE DATOS ---
+        const cargarMembresias = async () => {
+            try {
+                const response = await fetch('/api/admin/membresias');
+                const membresias = await response.json();
+                const cuerpo = document.getElementById("cuerpoTablaMembresias");
+                cuerpo.innerHTML = "";
+
+                if (membresias.length === 0) {
+                    cuerpo.innerHTML = "<tr><td colspan='6' style='text-align: center;'>No hay membresías registradas.</td></tr>";
+                    return;
+                }
+
+                // Agregamos el 'index' para crear el contador visual 1, 2, 3...
+                membresias.forEach((mem, index) => {
+                    let botonAccion = mem.estado.toLowerCase() === 'activo' 
+                        ? `<button class="btn-accion" style="background-color: #f39c12; color: white;" onclick="desactivarMembresia(${mem.id}, '${mem.nombre}')">Desactivar</button>` 
+                        : `<span style="color: gray; font-weight: bold;">Inactiva</span>`;
+
+                    cuerpo.innerHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${mem.nombre}</td>
+                            <td><b>S/. ${mem.precio}</b></td>
+                            <td style="text-align:center">${mem.duracion_meses} Meses</td>
+                            <td style="color: ${mem.estado.toLowerCase() === 'activo' ? '#27ae60' : '#7f8c8d'}; font-weight: bold; text-transform: capitalize;">${mem.estado}</td>
+                            <td>${botonAccion}</td>
+                        </tr>`;
+                });
+            } catch (e) { console.error(e); }
+        };
+
+        const cargarPagosGlobales = async () => {
+            const cuerpo = document.getElementById("cuerpoTablaPagos");
+            try {
+                const response = await fetch('/api/admin/pagos');
+                if (!response.ok) throw new Error("Error interno del servidor al buscar los pagos");
+                
+                const pagos = await response.json();
+                cuerpo.innerHTML = "";
+                let totalCaja = 0;
+
+                if (pagos.length === 0) {
+                    cuerpo.innerHTML = "<tr><td colspan='4' style='text-align: center;'>No hay ingresos registrados aún en la caja.</td></tr>";
+                    return;
+                }
+
+                pagos.forEach(pago => {
+                    totalCaja += parseFloat(pago.monto); 
+                    const fechaObj = new Date(pago.fecha_pago);
+                    const fechaFormateada = fechaObj.toLocaleDateString('es-PE') + " " + fechaObj.toLocaleTimeString('es-PE', {hour: '2-digit', minute:'2-digit'});
+                    
+                    cuerpo.innerHTML += `
+                        <tr>
+                            <td>${fechaFormateada}</td>
+                            <td><b>${pago.cliente}</b></td>
+                            <td>${pago.plan}</td>
+                            <td style="color: #27ae60; font-weight: bold;">S/. ${parseFloat(pago.monto).toFixed(2)}</td>
+                        </tr>`;
+                });
+
+                cuerpo.innerHTML += `
+                    <tr style="background-color: #1a1a1a; border-top: 3px solid #FFD700;">
+                        <td colspan="3" style="text-align: right; font-size: 18px; color: #FFD700;"><b>TOTAL RECAUDADO:</b></td>
+                        <td style="font-size: 18px; color: #FFD700;"><b>S/. ${totalCaja.toFixed(2)}</b></td>
+                    </tr>`;
+            } catch (e) { 
+                console.error("Error crítico al cargar pagos:", e);
+                cuerpo.innerHTML = `<tr><td colspan='4' style='text-align: center; color: #e74c3c; font-weight: bold;'>
+                    Hubo un error al conectar con la base de datos de pagos.<br>Revisa la terminal de VS Code para ver el error SQL.
+                </td></tr>`;
+            }
+        };
+
+        // --- 4. INICIALIZAR EVENTOS Y DATOS AL CARGAR LA PÁGINA ---
         document.addEventListener("DOMContentLoaded", async () => {
-            // Verificamos sesión
             const usuarioLocal = JSON.parse(localStorage.getItem("usuarioVitalGym"));
             if (!usuarioLocal || usuarioLocal.rol !== 'admin') {
                 window.location.href = "/"; return;
             }
+
+            // AHORA SÍ: Llamamos a las tablas porque ya el sistema conoce las funciones
+            cargarMembresias(); 
+            cargarPagosGlobales(); 
 
             // Cargar Clientes
             try {
@@ -162,28 +279,25 @@
                 document.getElementById("contadorClientes").textContent = clientes.length;
                 cuerpo.innerHTML = "";
 
-                clientes.forEach(cliente => {
+                clientes.forEach((cliente, index) => {
                     const fechaInicio = new Date(cliente.fecha_registro);
                     const fechaVencimiento = cliente.fecha_vencimiento ? new Date(cliente.fecha_vencimiento).toLocaleDateString('es-PE') : 'Sin plan';
                     let meses = (new Date().getFullYear() - fechaInicio.getFullYear()) * 12 + (new Date().getMonth() - fechaInicio.getMonth());
-                    if (meses === 0) meses = "Nuevo";
-
-                    // AQUÍ ESTÁ LA MAGIA DEL BOTÓN BORRAR RECONECTADO
+                    
                     cuerpo.innerHTML += `
                         <tr>
-                            <td>${cliente.id}</td><td>${cliente.nombre}</td><td>${fechaInicio.toLocaleDateString('es-PE')}</td>
+                            <td>${index + 1}</td>
+                            <td>${cliente.nombre}</td>
+                            <td>${fechaInicio.toLocaleDateString('es-PE')}</td>
                             <td style="text-align:center"><b>${meses}</b></td>
                             <td style="color: ${cliente.fecha_vencimiento ? '#27ae60' : '#e74c3c'};"><b>${fechaVencimiento}</b></td>
                             <td><button class="btn-accion btn-borrar" onclick="borrarCliente(${cliente.id}, '${cliente.nombre}')">Borrar</button></td>
                         </tr>`;
                 });
             } catch (e) { console.error("Error clientes", e); }
-        }); // FIN DEL DOMContentLoaded
+        }); 
 
-
-        // --- 3. LÓGICA DE CLIENTES (GUARDAR Y BORRAR) ---
-        
-        // A. Guardar un nuevo cliente desde el formulario
+        // --- 5. EVENTOS DE FORMULARIOS Y BUSCADOR ---
         document.getElementById("formNuevoCliente").addEventListener("submit", async (e) => {
             e.preventDefault();
             const nombre = document.getElementById("nuevoNombre").value;
@@ -201,94 +315,39 @@
                     alert(result.mensaje);
                     document.getElementById('modalNuevoCliente').style.display = "none";
                     document.getElementById("formNuevoCliente").reset();
-                    window.location.reload(); // Recargamos para ver al nuevo cliente
+                    window.location.reload(); 
                 } else { alert(result.mensaje); }
             } catch (error) { console.error(error); }
         });
 
-        // B. Función real para borrar un cliente
-        window.borrarCliente = async (id, nombre) => {
-            if(confirm(`¿Estás seguro de que deseas eliminar permanentemente a ${nombre}?`)) {
-                try {
-                    const response = await fetch(`/api/admin/clientes/${id}`, { method: 'DELETE' });
-                    if (response.ok) {
-                        alert("Cliente eliminado.");
-                        window.location.reload(); // Recargamos para que desaparezca
-                    }
-                } catch (error) { console.error(error); }
-            }
-        };
-        // --- CARGAR MEMBRESÍAS ---
-        const cargarMembresias = async () => {
-                try {
-                    const response = await fetch('/api/admin/membresias');
-                    const membresias = await response.json();
-                    const cuerpo = document.getElementById("cuerpoTablaMembresias");
-                    cuerpo.innerHTML = "";
+        document.getElementById("formMembresia").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById("memNombre").value;
+            const precio = document.getElementById("memPrecio").value;
+            const duracion_meses = document.getElementById("memDuracion").value;
 
-                    if (membresias.length === 0) {
-                        cuerpo.innerHTML = "<tr><td colspan='6' style='text-align: center;'>No hay membresías registradas.</td></tr>";
-                        return;
-                    }
-
-                    membresias.forEach(mem => {
-                        cuerpo.innerHTML += `
-                            <tr>
-                                <td>${mem.id}</td>
-                                <td>${mem.nombre}</td>
-                                <td><b>S/. ${mem.precio}</b></td>
-                                <td style="text-align:center">${mem.duracion_meses} Meses</td>
-                                <td style="color: #27ae60; font-weight: bold; text-transform: capitalize;">${mem.estado}</td>
-                                <td>
-                                    <button class="btn-accion btn-borrar" onclick="borrarMembresia(${mem.id}, '${mem.nombre}')">Borrar</button>
-                                </td>
-                            </tr>`;
-                    });
-                } catch (e) { console.error(e); }
-            };
-            cargarMembresias(); // Llamamos a la función al iniciar
-
-            // --- CREAR NUEVA MEMBRESÍA ---
-            document.getElementById("formMembresia").addEventListener("submit", async (e) => {
-                e.preventDefault();
-                const nombre = document.getElementById("memNombre").value;
-                const precio = document.getElementById("memPrecio").value;
-                const duracion_meses = document.getElementById("memDuracion").value;
-
-                try {
-                    const response = await fetch('/api/admin/membresias', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ nombre, precio, duracion_meses })
-                    });
-                    if (response.ok) {
-                        alert("¡Membresía guardada con éxito!");
-                        document.getElementById('modalMembresia').style.display = 'none';
-                        document.getElementById("formMembresia").reset();
-                        cargarMembresias(); // Recargar tabla
-                    }
-                } catch (error) { alert("Error al guardar"); }
-            });
-
-            // --- BORRAR MEMBRESÍA (Hacemos la función global) ---
-            window.borrarMembresia = async (id, nombre) => {
-                if(confirm(`¿Seguro que deseas borrar el plan "${nombre}"?`)) {
-                    await fetch(`/api/admin/membresias/${id}`, { method: 'DELETE' });
-                    cargarMembresias(); // Recargar tabla
+            try {
+                const response = await fetch('/api/admin/membresias', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, precio, duracion_meses })
+                });
+                if (response.ok) {
+                    alert("¡Membresía guardada con éxito!");
+                    document.getElementById('modalMembresia').style.display = 'none';
+                    document.getElementById("formMembresia").reset();
+                    cargarMembresias(); 
                 }
-            };
-            // --- BUSCADOR EN TIEMPO REAL ---
+            } catch (error) { alert("Error al guardar"); }
+        });
+
         document.getElementById("buscadorClientes").addEventListener("keyup", function() {
             const filtro = this.value.toLowerCase();
             const filas = document.querySelectorAll("#cuerpoTablaClientes tr");
-
             filas.forEach(fila => {
                 const celdaNombre = fila.getElementsByTagName("td")[1];
-                
                 if (celdaNombre) {
                     const textoNombre = celdaNombre.textContent || celdaNombre.innerText;
-                    
-                    // CORRECCIÓN AQUÍ: Ahora sí dice 'filtro' correctamente
                     if (textoNombre.toLowerCase().indexOf(filtro) > -1) {
                         fila.style.display = "";
                     } else {

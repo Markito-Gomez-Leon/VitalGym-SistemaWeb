@@ -82,9 +82,26 @@ exports.crearMembresia = (req, res) => {
 // Borrar membresía
 exports.borrarMembresia = (req, res) => {
     const id = req.params.id;
-    const query = "DELETE FROM membresias WHERE id = ?";
-    db.query(query, [id], (err, results) => {
-        if (err) return res.status(500).json({ mensaje: 'Error al borrar membresía' });
-        res.status(200).json({ mensaje: 'Membresía eliminada' });
+    // En vez de: "DELETE FROM membresias WHERE id = ?"
+    const query = "UPDATE membresias SET estado = 'inactivo' WHERE id = ?";
+
+    db.query(query, [req.params.id], (err, results) => {
+        if (err) return res.status(500).json({ mensaje: 'Error al desactivar la membresía' });
+        res.status(200).json({ mensaje: 'Membresía dada de baja (inactiva) correctamente.' });
+    });
+};
+// Obtener todos los pagos globales
+exports.obtenerTodosLosPagos = (req, res) => {
+    const query = `
+        SELECT h.fecha_pago, u.nombre AS cliente, m.nombre AS plan, h.monto 
+        FROM historial_pagos h
+        JOIN usuarios u ON h.usuario_id = u.id
+        JOIN membresias m ON h.membresia_id = m.id
+        ORDER BY h.fecha_pago DESC
+        LIMIT 50
+    `;
+    db.query(query, (err, results) => {
+        if (err) return res.status(500).json({ mensaje: 'Error al cargar pagos' });
+        res.status(200).json(results);
     });
 };

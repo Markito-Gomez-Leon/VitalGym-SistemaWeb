@@ -36,8 +36,18 @@ exports.pagarMembresia = (req, res) => {
         const precio = memRes[0].precio;
 
         // Actualizamos al usuario
-        const queryUpdate = "UPDATE usuarios SET membresia_id = ?, fecha_vencimiento = DATE_ADD(CURDATE(), INTERVAL ? MONTH) WHERE id = ?";
-        db.query(queryUpdate, [idMembresia, meses, idUsuario], (err2) => {
+        // Reemplaza esto:
+        // const queryUpdate = "UPDATE usuarios SET membresia_id = ?, fecha_vencimiento = DATE_ADD(CURDATE(), INTERVAL ? MONTH) WHERE id = ?";
+
+        // POR ESTA NUEVA LÓGICA ACUMULATIVA:
+        const queryUpdate = `
+        UPDATE usuarios 
+        SET membresia_id = ?, 
+            fecha_vencimiento = IF(fecha_vencimiento > CURDATE(), 
+                                DATE_ADD(fecha_vencimiento, INTERVAL ? MONTH), 
+                                DATE_ADD(CURDATE(), INTERVAL ? MONTH)) 
+        WHERE id = ?`;
+        db.query(queryUpdate, [idMembresia, meses, meses, idUsuario], (err2) => {
             if (err2) return res.status(500).json({ mensaje: 'Error al actualizar usuario' });
             
             // CREAMOS EL RECIBO EN EL HISTORIAL
@@ -51,7 +61,7 @@ exports.pagarMembresia = (req, res) => {
 
 // 5. NUEVO: Obtener el Historial del Cliente
 exports.obtenerHistorial = (req, res) => {
-    const query = `
+    const query = ` 
         SELECT h.fecha_pago, m.nombre AS plan, h.monto 
         FROM historial_pagos h
         JOIN membresias m ON h.membresia_id = m.id
