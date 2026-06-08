@@ -232,11 +232,10 @@
             } catch (e) { console.error(e); }
         };
 
-        // --- FUNCIÓN MEJORADA QUE ACEPTA FECHAS ---
+        // --- FUNCIÓN MEJORADA DE PAGOS (Con mensaje de vacío) ---
         const cargarPagosGlobales = async (inicio = '', fin = '') => {
             const cuerpo = document.getElementById("cuerpoTablaPagos");
             try {
-                // Si hay fechas, armamos la URL con parámetros, si no, busca todo
                 let url = '/api/admin/pagos';
                 if (inicio && fin) url += `?inicio=${inicio}&fin=${fin}`;
 
@@ -247,11 +246,26 @@
                 cuerpo.innerHTML = "";
                 let totalCaja = 0;
 
+                // AQUÍ ESTÁ EL CAMBIO: Qué pasa si la fecha no tiene ventas
                 if (pagos.length === 0) {
-                    cuerpo.innerHTML = "<tr><td colspan='4' style='text-align: center;'>No hay ingresos registrados en este rango de fechas.</td></tr>";
-                    return;
+                    // 1. Ponemos el anuncio rojo claro en el medio
+                    cuerpo.innerHTML = `
+                        <tr>
+                            <td colspan='4' style='text-align: center; padding: 25px; font-weight: bold; color: #e74c3c; font-size: 16px;'>
+                                ⚠️ No hay pagos registrados de clientes en esta fecha.
+                            </td>
+                        </tr>`;
+                    
+                    // 2. Mantenemos el total en 0 abajo para que se siga viendo como un reporte
+                    cuerpo.innerHTML += `
+                        <tr style="background-color: #1a1a1a; border-top: 3px solid #FFD700;">
+                            <td colspan="3" style="text-align: right; font-size: 18px; color: #FFD700;"><b>TOTAL RECAUDADO DEL PERIODO:</b></td>
+                            <td style="font-size: 18px; color: #FFD700;"><b>S/. 0.00</b></td>
+                        </tr>`;
+                    return; // Detenemos la función aquí
                 }
 
+                // Si SÍ hay ventas, las dibujamos normal
                 pagos.forEach(pago => {
                     totalCaja += parseFloat(pago.monto); 
                     const fechaObj = new Date(pago.fecha_pago);
@@ -266,6 +280,7 @@
                         </tr>`;
                 });
 
+                // Y ponemos la suma total real
                 cuerpo.innerHTML += `
                     <tr style="background-color: #1a1a1a; border-top: 3px solid #FFD700;">
                         <td colspan="3" style="text-align: right; font-size: 18px; color: #FFD700;"><b>TOTAL RECAUDADO DEL PERIODO:</b></td>
