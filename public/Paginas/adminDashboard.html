@@ -8,7 +8,7 @@
         body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-image: url('../Imagenes/Fondo/abstractbg4.jpg'); background-size: cover; background-attachment: fixed; display: flex; height: 100vh; overflow: hidden; }
         
         /* --- BARRA LATERAL (SIDEBAR) --- */
-        .sidebar { width: 250px; background-color: #111; color: white; display: flex; flex-direction: column; border-right: 2px solid #FFD700; z-index: 100; }
+        .sidebar { width: 250px; min-width: 250px; flex-shrink: 0; background-color: #111; color: white; display: flex; flex-direction: column; border-right: 2px solid #FFD700; z-index: 100; }
         .sidebar-header { padding: 20px; text-align: center; border-bottom: 1px solid #333; }
         .sidebar-header h2 { color: white; margin: 0; font-size: 24px; }
         .sidebar-header span { color: #FFD700; }
@@ -53,6 +53,20 @@
             <li><a id="linkMembresias" onclick="cambiarPanel('panelMembresias', 'linkMembresias')">🏷️ Promociones y Planes</a></li>
             <li><a id="linkPagos" onclick="cambiarPanel('panelPagos', 'linkPagos')">💰 Historial de Pagos</a></li>
         </ul>
+        
+        <div style="padding: 15px; border-top: 1px solid #333; border-bottom: 1px solid #333; margin-top: 5px;">
+            <p style="color: #FFD700; margin: 0 0 10px 0; font-size: 14px; text-align: center; font-weight: bold;">Auditoría de Caja</p>
+            
+            <label style="color: white; font-size: 12px;">Desde:</label>
+            <input type="date" id="fechaInicio" style="width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 8px; border-radius: 4px; border: 1px solid #555; background: #222; color: white; font-size: 12px;">
+            
+            <label style="color: white; font-size: 12px;">Hasta:</label>
+            <input type="date" id="fechaFin" style="width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #555; background: #222; color: white; font-size: 12px;">
+            
+            <button onclick="filtrarFechas()" style="width: 100%; background: #FFD700; color: black; padding: 8px; border: none; font-weight: bold; border-radius: 4px; cursor: pointer; margin-bottom: 5px;">🔍 Filtrar</button>
+            <button onclick="limpiarFiltro()" style="width: 100%; background: #555; color: white; padding: 8px; border: none; font-weight: bold; border-radius: 4px; cursor: pointer;">Borrar Filtro</button>
+        </div>
+        
         <div class="sidebar-footer">
             <button onclick="cerrarSesion()">Cerrar Sesión</button>
         </div>
@@ -99,7 +113,7 @@
 
         <section id="panelPagos" class="panel">
             <div class="header-panel">
-                <h1>Historial de Pagos (Caja Global)</h1>
+                <h1>Caja Global</h1>
             </div>
             <table id="tablaPagosGlobales">
                 <thead>
@@ -218,10 +232,15 @@
             } catch (e) { console.error(e); }
         };
 
-        const cargarPagosGlobales = async () => {
+        // --- FUNCIÓN MEJORADA QUE ACEPTA FECHAS ---
+        const cargarPagosGlobales = async (inicio = '', fin = '') => {
             const cuerpo = document.getElementById("cuerpoTablaPagos");
             try {
-                const response = await fetch('/api/admin/pagos');
+                // Si hay fechas, armamos la URL con parámetros, si no, busca todo
+                let url = '/api/admin/pagos';
+                if (inicio && fin) url += `?inicio=${inicio}&fin=${fin}`;
+
+                const response = await fetch(url);
                 if (!response.ok) throw new Error("Error interno del servidor al buscar los pagos");
                 
                 const pagos = await response.json();
@@ -229,7 +248,7 @@
                 let totalCaja = 0;
 
                 if (pagos.length === 0) {
-                    cuerpo.innerHTML = "<tr><td colspan='4' style='text-align: center;'>No hay ingresos registrados aún en la caja.</td></tr>";
+                    cuerpo.innerHTML = "<tr><td colspan='4' style='text-align: center;'>No hay ingresos registrados en este rango de fechas.</td></tr>";
                     return;
                 }
 
@@ -249,15 +268,43 @@
 
                 cuerpo.innerHTML += `
                     <tr style="background-color: #1a1a1a; border-top: 3px solid #FFD700;">
-                        <td colspan="3" style="text-align: right; font-size: 18px; color: #FFD700;"><b>TOTAL RECAUDADO:</b></td>
+                        <td colspan="3" style="text-align: right; font-size: 18px; color: #FFD700;"><b>TOTAL RECAUDADO DEL PERIODO:</b></td>
                         <td style="font-size: 18px; color: #FFD700;"><b>S/. ${totalCaja.toFixed(2)}</b></td>
                     </tr>`;
             } catch (e) { 
                 console.error("Error crítico al cargar pagos:", e);
-                cuerpo.innerHTML = `<tr><td colspan='4' style='text-align: center; color: #e74c3c; font-weight: bold;'>
-                    Hubo un error al conectar con la base de datos de pagos.<br>Revisa la terminal de VS Code para ver el error SQL.
-                </td></tr>`;
+                cuerpo.innerHTML = `<tr><td colspan='4' style='text-align: center; color: #e74c3c;'>Error al conectar con la base de datos de pagos.</td></tr>`;
             }
+        };
+
+        // --- LAS VALIDACIONES DE BUSCAR POR FECHA ---
+        window.filtrarFechas = () => {
+            const inicio = document.getElementById("fechaInicio").value;
+            const fin = document.getElementById("fechaFin").value;
+
+            if (!inicio || !fin) {
+                alert("Por favor, selecciona ambas fechas para filtrar.");
+                return;
+            }
+
+            // REGLA DE NEGOCIO: La fecha inicial NO puede ser mayor a la final
+            if (inicio > fin) {
+                alert("ERROR DE CONCORDANCIA: La fecha 'Desde' no puede ser mayor que la fecha 'Hasta'.");
+                return;
+            }
+
+            // Si todo está bien:
+            // 1. Saltamos automáticamente a la pestaña de pagos (UX Pro-Tip)
+            cambiarPanel('panelPagos', 'linkPagos');
+            // 2. Cargamos los pagos con el filtro
+            cargarPagosGlobales(inicio, fin);
+        };
+
+        // --- BOTÓN PARA LIMPIAR ---
+        window.limpiarFiltro = () => {
+            document.getElementById("fechaInicio").value = "";
+            document.getElementById("fechaFin").value = "";
+            cargarPagosGlobales(); // Carga todo de nuevo
         };
 
         // --- 4. INICIALIZAR EVENTOS Y DATOS AL CARGAR LA PÁGINA ---
