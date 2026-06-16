@@ -63,6 +63,11 @@
             <label style="color: white; font-size: 12px;">Hasta:</label>
             <input type="date" id="fechaFin" style="width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #555; background: #222; color: white; font-size: 12px;">
             
+            <label style="color: white; font-size: 12px;">Plan de Gimnasio:</label>
+            <select id="filtroPlan" style="width: 100%; box-sizing: border-box; padding: 6px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #555; background: #222; color: white; font-size: 12px;">
+                <option value="todos">Todos los planes</option>
+            </select>
+
             <button onclick="filtrarFechas()" style="width: 100%; background: #FFD700; color: black; padding: 8px; border: none; font-weight: bold; border-radius: 4px; cursor: pointer; margin-bottom: 5px;">🔍 Filtrar</button>
             <button onclick="limpiarFiltro()" style="width: 100%; background: #555; color: white; padding: 8px; border: none; font-weight: bold; border-radius: 4px; cursor: pointer;">Borrar Filtro</button>
         </div>
@@ -200,12 +205,29 @@
             }
         };
 
+        window.habilitarMembresia = async (id, nombre) => {
+            if(confirm(`¿Deseas volver a HABILITAR el plan "${nombre}" para que los clientes puedan comprarlo?`)) {
+                try {
+                    const response = await fetch(`/api/admin/membresias/${id}/habilitar`, { method: 'PUT' }); 
+                    if (response.ok) {
+                        alert("Plan habilitado correctamente.");
+                        cargarMembresias(); // Recargar tabla
+                    }
+                } catch (error) { console.error(error); }
+            }
+        };
+
         // --- 3. FUNCIONES DE CARGA DE DATOS ---
         const cargarMembresias = async () => {
             try {
                 const response = await fetch('/api/admin/membresias');
                 const membresias = await response.json();
                 const cuerpo = document.getElementById("cuerpoTablaMembresias");
+                
+                // Llenamos dinámicamente el desplegable del filtro de caja
+                const selectPlan = document.getElementById("filtroPlan");
+                selectPlan.innerHTML = '<option value="todos">Todos los planes</option>';
+                
                 cuerpo.innerHTML = "";
 
                 if (membresias.length === 0) {
@@ -213,11 +235,14 @@
                     return;
                 }
 
-                // Agregamos el 'index' para crear el contador visual 1, 2, 3...
                 membresias.forEach((mem, index) => {
+                    // Agregamos la opción al desplegable
+                    selectPlan.innerHTML += `<option value="${mem.id}">${mem.nombre}</option>`;
+
+                    // LÓGICA SIMÉTRICA: Si está activo sale botón rojo(naranja), si está inactivo sale botón verde
                     let botonAccion = mem.estado.toLowerCase() === 'activo' 
                         ? `<button class="btn-accion" style="background-color: #f39c12; color: white;" onclick="desactivarMembresia(${mem.id}, '${mem.nombre}')">Desactivar</button>` 
-                        : `<span style="color: gray; font-weight: bold;">Inactiva</span>`;
+                        : `<button class="btn-accion" style="background-color: #27ae60; color: white;" onclick="habilitarMembresia(${mem.id}, '${mem.nombre}')">Habilitar</button>`;
 
                     cuerpo.innerHTML += `
                         <tr>
@@ -233,11 +258,17 @@
         };
 
         // --- FUNCIÓN MEJORADA DE PAGOS (Con mensaje de vacío) ---
-        const cargarPagosGlobales = async (inicio = '', fin = '') => {
+        // --- FUNCIÓN MEJORADA DE PAGOS (Soporta Fechas y Planes) ---
+        const cargarPagosGlobales = async (inicio = '', fin = '', plan = 'todos') => {
             const cuerpo = document.getElementById("cuerpoTablaPagos");
             try {
                 let url = '/api/admin/pagos';
-                if (inicio && fin) url += `?inicio=${inicio}&fin=${fin}`;
+                let params = [];
+                // Construimos la URL inteligentemente según los filtros que tenga el usuario
+                if (inicio && fin) params.push(`inicio=${inicio}&fin=${fin}`);
+                if (plan !== 'todos') params.push(`plan=${plan}`);
+                
+                if (params.length > 0) url += '?' + params.join('&');
 
                 const response = await fetch(url);
                 if (!response.ok) throw new Error("Error interno del servidor al buscar los pagos");
@@ -246,80 +277,46 @@
                 cuerpo.innerHTML = "";
                 let totalCaja = 0;
 
-                // AQUÍ ESTÁ EL CAMBIO: Qué pasa si la fecha no tiene ventas
                 if (pagos.length === 0) {
-                    // 1. Ponemos el anuncio rojo claro en el medio
-                    cuerpo.innerHTML = `
-                        <tr>
-                            <td colspan='4' style='text-align: center; padding: 25px; font-weight: bold; color: #e74c3c; font-size: 16px;'>
-                                ⚠️ No hay pagos registrados de clientes en esta fecha.
-                            </td>
-                        </tr>`;
-                    
-                    // 2. Mantenemos el total en 0 abajo para que se siga viendo como un reporte
-                    cuerpo.innerHTML += `
-                        <tr style="background-color: #1a1a1a; border-top: 3px solid #FFD700;">
-                            <td colspan="3" style="text-align: right; font-size: 18px; color: #FFD700;"><b>TOTAL RECAUDADO DEL PERIODO:</b></td>
-                            <td style="font-size: 18px; color: #FFD700;"><b>S/. 0.00</b></td>
-                        </tr>`;
-                    return; // Detenemos la función aquí
+                    cuerpo.innerHTML = `<tr><td colspan='4' style='text-align: center; padding: 25px; font-weight: bold; color: #e74c3c; font-size: 16px;'>⚠️ No hay ingresos que coincidan con estos filtros.</td></tr>`;
+                    cuerpo.innerHTML += `<tr style="background-color: #1a1a1a; border-top: 3px solid #FFD700;"><td colspan="3" style="text-align: right; font-size: 18px; color: #FFD700;"><b>TOTAL RECAUDADO:</b></td><td style="font-size: 18px; color: #FFD700;"><b>S/. 0.00</b></td></tr>`;
+                    return;
                 }
 
-                // Si SÍ hay ventas, las dibujamos normal
                 pagos.forEach(pago => {
                     totalCaja += parseFloat(pago.monto); 
                     const fechaObj = new Date(pago.fecha_pago);
                     const fechaFormateada = fechaObj.toLocaleDateString('es-PE') + " " + fechaObj.toLocaleTimeString('es-PE', {hour: '2-digit', minute:'2-digit'});
                     
-                    cuerpo.innerHTML += `
-                        <tr>
-                            <td>${fechaFormateada}</td>
-                            <td><b>${pago.cliente}</b></td>
-                            <td>${pago.plan}</td>
-                            <td style="color: #27ae60; font-weight: bold;">S/. ${parseFloat(pago.monto).toFixed(2)}</td>
-                        </tr>`;
+                    cuerpo.innerHTML += `<tr><td>${fechaFormateada}</td><td><b>${pago.cliente}</b></td><td>${pago.plan}</td><td style="color: #27ae60; font-weight: bold;">S/. ${parseFloat(pago.monto).toFixed(2)}</td></tr>`;
                 });
 
-                // Y ponemos la suma total real
-                cuerpo.innerHTML += `
-                    <tr style="background-color: #1a1a1a; border-top: 3px solid #FFD700;">
-                        <td colspan="3" style="text-align: right; font-size: 18px; color: #FFD700;"><b>TOTAL RECAUDADO DEL PERIODO:</b></td>
-                        <td style="font-size: 18px; color: #FFD700;"><b>S/. ${totalCaja.toFixed(2)}</b></td>
-                    </tr>`;
-            } catch (e) { 
-                console.error("Error crítico al cargar pagos:", e);
-                cuerpo.innerHTML = `<tr><td colspan='4' style='text-align: center; color: #e74c3c;'>Error al conectar con la base de datos de pagos.</td></tr>`;
-            }
+                cuerpo.innerHTML += `<tr style="background-color: #1a1a1a; border-top: 3px solid #FFD700;"><td colspan="3" style="text-align: right; font-size: 18px; color: #FFD700;"><b>TOTAL RECAUDADO:</b></td><td style="font-size: 18px; color: #FFD700;"><b>S/. ${totalCaja.toFixed(2)}</b></td></tr>`;
+            } catch (e) { cuerpo.innerHTML = `<tr><td colspan='4' style='text-align: center; color: #e74c3c;'>Error de red.</td></tr>`; }
         };
 
-        // --- LAS VALIDACIONES DE BUSCAR POR FECHA ---
         window.filtrarFechas = () => {
             const inicio = document.getElementById("fechaInicio").value;
             const fin = document.getElementById("fechaFin").value;
+            const plan = document.getElementById("filtroPlan").value;
 
-            if (!inicio || !fin) {
-                alert("Por favor, selecciona ambas fechas para filtrar.");
-                return;
+            // Validaciones
+            if ((inicio && !fin) || (!inicio && fin)) {
+                alert("Por favor, selecciona ambas fechas para filtrar por rango temporal."); return;
+            }
+            if (inicio && fin && inicio > fin) {
+                alert("ERROR DE CONCORDANCIA: La fecha 'Desde' no puede ser mayor que la fecha 'Hasta'."); return;
             }
 
-            // REGLA DE NEGOCIO: La fecha inicial NO puede ser mayor a la final
-            if (inicio > fin) {
-                alert("ERROR DE CONCORDANCIA: La fecha 'Desde' no puede ser mayor que la fecha 'Hasta'.");
-                return;
-            }
-
-            // Si todo está bien:
-            // 1. Saltamos automáticamente a la pestaña de pagos (UX Pro-Tip)
             cambiarPanel('panelPagos', 'linkPagos');
-            // 2. Cargamos los pagos con el filtro
-            cargarPagosGlobales(inicio, fin);
+            cargarPagosGlobales(inicio, fin, plan); // Enviamos los 3 parámetros
         };
 
-        // --- BOTÓN PARA LIMPIAR ---
         window.limpiarFiltro = () => {
             document.getElementById("fechaInicio").value = "";
             document.getElementById("fechaFin").value = "";
-            cargarPagosGlobales(); // Carga todo de nuevo
+            document.getElementById("filtroPlan").value = "todos"; // Reseteamos el desplegable
+            cargarPagosGlobales(); 
         };
 
         // --- 4. INICIALIZAR EVENTOS Y DATOS AL CARGAR LA PÁGINA ---

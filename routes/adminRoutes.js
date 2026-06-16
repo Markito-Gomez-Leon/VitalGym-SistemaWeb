@@ -10,5 +10,7 @@ router.post('/clientes', adminController.crearCliente);
 router.get('/membresias', adminController.listarMembresias);
 router.post('/membresias', adminController.crearMembresia);
 router.delete('/membresias/:id', adminController.borrarMembresia);
+// NUEVA RUTA PARA HABILITAR (Usa método PUT para cambiar estado a activo)
+router.put('/membresias/:id/habilitar', adminController.habilitarMembresia);
 router.get('/pagos', adminController.obtenerTodosLosPagos);
 module.exports = router;

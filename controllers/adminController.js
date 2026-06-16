@@ -76,28 +76,39 @@ exports.borrarMembresia = (req, res) => {
         res.status(200).json({ mensaje: 'Membresía dada de baja (inactiva) correctamente.' });
     });
 };
-// Obtener todos los pagos globales con Filtro de Fechas
+// Habilitar membresía (Cambiar estado a activo)
+exports.habilitarMembresia = (req, res) => {
+    const id = req.params.id;
+    const query = "UPDATE membresias SET estado = 'activo' WHERE id = ?";
+    db.query(query, [id], (err, results) => {
+        if (err) return res.status(500).json({ mensaje: 'Error al habilitar la membresía' });
+        res.status(200).json({ mensaje: 'Membresía habilitada y lista para venderse nuevamente.' });
+    });
+};
+// Obtener todos los pagos globales con Filtro de Fechas y Planes
 exports.obtenerTodosLosPagos = (req, res) => {
-    // Capturamos las fechas si el Frontend las envía
-    const { inicio, fin } = req.query; 
-
+    const { inicio, fin, plan } = req.query; 
+    // Usamos WHERE 1=1 como truco de Senior para poder concatenar filtros dinámicamente
     let query = `
         SELECT h.fecha_pago, u.nombre AS cliente, m.nombre AS plan, h.monto 
         FROM historial_pagos h
         JOIN usuarios u ON h.usuario_id = u.id
         JOIN membresias m ON h.membresia_id = m.id
+        WHERE 1=1 
     `;
     let queryParams = [];
-
-    // Si el usuario envió las dos fechas, agregamos el filtro WHERE
+    // Filtro 1: Rango temporal
     if (inicio && fin) {
-        // Usamos DATE() para ignorar las horas y permitir que busquen el mismo día
-        query += " WHERE DATE(h.fecha_pago) BETWEEN ? AND ? ";
+        query += " AND DATE(h.fecha_pago) BETWEEN ? AND ? ";
         queryParams.push(inicio, fin);
     }
-
+    // Filtro 2: Tipo de Plan (Desplegable)
+    if (plan && plan !== 'todos') {
+        query += " AND m.id = ? ";
+        queryParams.push(plan);
+    }
     query += " ORDER BY h.fecha_pago DESC LIMIT 50";
-
+    
     db.query(query, queryParams, (err, results) => {
         if (err) return res.status(500).json({ mensaje: 'Error al cargar pagos' });
         res.status(200).json(results);
