@@ -274,5 +274,163 @@
         // Ejecutar al cargar la página
         document.addEventListener("DOMContentLoaded", cargarDatosSocio);
     </script>
+    <style>
+        .bot-burbuja {
+            position: fixed; bottom: 25px; right: 25px;
+            width: 60px; height: 60px; background-color: #111;
+            border: 2px solid #FFD700; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 28px; cursor: pointer; z-index: 5000;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        .bot-burbuja:hover { transform: scale(1.1); }
+
+        .bot-ventana {
+            position: fixed; bottom: 95px; right: 25px;
+            width: 330px; height: 430px; background-color: #111;
+            border: 2px solid #FFD700; border-radius: 10px;
+            display: none; flex-direction: column; z-index: 5000;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.6);
+            font-family: Arial, sans-serif; overflow: hidden;
+        }
+
+        .bot-header {
+            background-color: #222; padding: 12px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #333; color: #FFD700; font-weight: bold;
+        }
+        .bot-cerrar { font-size: 22px; cursor: pointer; color: #aaa; }
+        .bot-cerrar:hover { color: #e74c3c; }
+
+        .bot-body {
+            flex-grow: 1; padding: 15px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 12px;
+            background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85));
+        }
+
+        .bot-msg {
+            background-color: #222; color: white; padding: 10px 14px;
+            border-radius: 8px 8px 8px 0px; font-size: 14px;
+            line-height: 1.4; max-width: 85%; align-self: flex-start;
+            border-left: 3px solid #FFD700;
+        }
+
+        .bot-opciones { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
+        .bot-btn {
+            background-color: rgba(255, 215, 0, 0.05); color: white;
+            border: 1px solid #FFD700; padding: 8px 12px; border-radius: 5px;
+            cursor: pointer; text-align: left; font-size: 13px; font-weight: bold;
+            transition: 0.3s;
+        }
+        .bot-btn:hover { background-color: #FFD700; color: black; }
+    </style>
+
+    <div id="botBurbuja" class="bot-burbuja" onclick="alternarBotSocio()">💬</div>
+
+    <div id="botVentana" class="bot-ventana">
+        <div class="bot-header">
+            <span>🦾 VitalBot - Mi Cuenta</span>
+            <span class="bot-cerrar" onclick="alternarBotSocio()">&times;</span>
+        </div>
+        <div id="botCuerpo" class="bot-body">
+            <div id="botSaludoSocio" class="bot-msg">¡Hola! Gusto en verte por aquí.</div>
+            <div id="botContenedorOpciones" class="bot-opciones">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // Abrir y cerrar ventana capturando la identidad del socio
+        function alternarBotSocio() {
+            const ventana = document.getElementById("botVentana");
+            if (ventana.style.display === "none" || ventana.style.display === "") {
+                ventana.style.display = "flex";
+                
+                // Capturamos el nombre de la sesión activa para saludarlo de forma pro
+                const socioActivo = JSON.parse(localStorage.getItem("usuarioVitalGym"));
+                if(socioActivo) {
+                    document.getElementById("botSaludoSocio").innerHTML = `Hola <b>${socioActivo.nombre}</b> 👋, soy tu asistente virtual de Vital Gym. ¿Qué información deseas consultar sobre tu cuenta?`;
+                }
+                mostrarMenuSocio();
+            } else {
+                ventana.style.display = "none";
+            }
+        }
+
+        // Menú de opciones de consulta privada
+        function mostrarMenuSocio() {
+            const opciones = document.getElementById("botContenedorOpciones");
+            opciones.innerHTML = `
+                <button class="bot-btn" onclick="botConsultarMembresia()">🔍 Consultar estado de mi membresía</button>
+                <button class="bot-btn" onclick="botConsultarPagos()">💳 Ver mis últimos recibos</button>
+            `;
+        }
+
+        // Opción A: Consultar estado de membresía personalizado en tiempo real
+        async function botConsultarMembresia() {
+            const cuerpo = document.getElementById("botCuerpo");
+            const socioActivo = JSON.parse(localStorage.getItem("usuarioVitalGym"));
+            
+            cuerpo.innerHTML += `<div class="bot-msg" style="align-self: flex-end; background:#FFD700; color:black; border:none; border-radius: 8px 8px 0px 8px;">🔍 Consultar estado de mi membresía</div>`;
+            
+            try {
+                // Reutilizamos el endpoint de consultar perfil por ID del socio logueado
+                const response = await fetch(`/api/socio/${socioActivo.id}`);
+                const datos = await response.json();
+                
+                let estadoTxt = datos.plan_actual ? `Tu plan contratado es: <b>${datos.plan_actual}</b>.<br>` : "Actualmente <b>no registras un plan activo</b>.<br>";
+                
+                if (datos.fecha_vencimiento) {
+                    const vencimiento = new Date(datos.fecha_vencimiento);
+                    estadoTxt += `📅 Fecha de Vencimiento: <b>${vencimiento.toLocaleDateString('es-PE')}</b>.`;
+                }
+                
+                cuerpo.innerHTML += `<div class="bot-msg">📋 <b>Estado de Cuenta:</b><br><br>${estadoTxt}</div>`;
+            } catch(e) {
+                cuerpo.innerHTML += `<div class="bot-msg">Tuvimos un problema al consultar tu cuenta de socio.</div>`;
+            }
+            
+            botVolverSocio();
+        }
+
+        // Opción B: Consultar historial de pagos personalizado en tiempo real
+        async function botConsultarPagos() {
+            const cuerpo = document.getElementById("botCuerpo");
+            const socioActivo = JSON.parse(localStorage.getItem("usuarioVitalGym"));
+            
+            cuerpo.innerHTML += `<div class="bot-msg" style="align-self: flex-end; background:#FFD700; color:black; border:none; border-radius: 8px 8px 0px 8px;">💳 Ver mis últimos recibos</div>`;
+            
+            try {
+                // Reutilizamos el endpoint del historial de recibos por ID de socio
+                const response = await fetch(`/api/socio/${socioActivo.id}/historial`);
+                const historial = await response.json();
+                
+                if (historial.length === 0) {
+                    cuerpo.innerHTML += `<div class="bot-msg">Aún no registras ninguna transacción económica en nuestro sistema.</div>`;
+                } else {
+                    let recibosTxt = "🧾 <b>Tus últimas transacciones:</b><br><br>";
+                    // Tomamos los últimos 3 pagos para no saturar la burbuja del chat
+                    const ultimosPagos = historial.slice(0, 3);
+                    ultimosPagos.forEach(p => {
+                        const f = new Date(p.fecha_pago).toLocaleDateString('es-PE');
+                        recibosTxt += `• <b>${f}</b> - ${p.plan}: <span style="color:#2ecc71; font-weight:bold;">S/. ${p.monto}</span><br>`;
+                    });
+                    cuerpo.innerHTML += `<div class="bot-msg">${recibosTxt}</div>`;
+                }
+            } catch(e) {
+                cuerpo.innerHTML += `<div class="bot-msg">No se pudo recuperar tu historial de caja.</div>`;
+            }
+            
+            botVolverSocio();
+        }
+
+        function botVolverSocio() {
+            const opciones = document.getElementById("botContenedorOpciones");
+            opciones.innerHTML = `<button class="bot-btn" style="background:#333;" onclick="mostrarMenuSocio()">⬅️ Volver al menú de cuenta</button>`;
+            const cuerpo = document.getElementById("botCuerpo");
+            cuerpo.scrollTop = cuerpo.scrollHeight; // Auto-scroll
+        }
+    </script>
 </body>
 </html>

@@ -98,5 +98,147 @@
 		</footer>
 
 		<script src="JS/main.js"></script>
+		<style>
+            /* Burbuja circular flotante */
+            .bot-burbuja {
+                position: fixed; bottom: 25px; right: 25px;
+                width: 60px; height: 60px; background-color: #111;
+                border: 2px solid #FFD700; border-radius: 50%;
+                display: flex; justify-content: center; align-items: center;
+                font-size: 28px; cursor: pointer; z-index: 5000;
+                box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+                transition: transform 0.3s ease;
+            }
+            .bot-burbuja:hover { transform: scale(1.1); }
+
+            /* Ventana de chat desplegable */
+            .bot-ventana {
+                position: fixed; bottom: 95px; right: 25px;
+                width: 330px; height: 430px; background-color: #111;
+                border: 2px solid #FFD700; border-radius: 10px;
+                display: none; flex-direction: column; z-index: 5000;
+                box-shadow: 0 5px 25px rgba(0,0,0,0.6);
+                font-family: Arial, sans-serif; overflow: hidden;
+            }
+
+            /* Encabezado del chat */
+            .bot-header {
+                background-color: #222; padding: 12px 15px;
+                display: flex; justify-content: space-between; align-items: center;
+                border-bottom: 1px solid #333; color: #FFD700; font-weight: bold;
+            }
+            .bot-cerrar { font-size: 22px; cursor: pointer; color: #aaa; }
+            .bot-cerrar:hover { color: #e74c3c; }
+
+            /* Cuerpo donde van los mensajes */
+            .bot-body {
+                flex-grow: 1; padding: 15px; overflow-y: auto;
+                display: flex; flex-direction: column; gap: 12px;
+                background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85));
+            }
+
+            /* Globos de mensajes */
+            .bot-msg {
+                background-color: #222; color: white; padding: 10px 14px;
+                border-radius: 8px 8px 8px 0px; font-size: 14px;
+                line-height: 1.4; max-width: 85%; align-self: flex-start;
+                border-left: 3px solid #FFD700;
+            }
+
+            /* Panel de opciones por botones */
+            .bot-opciones { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
+            .bot-btn {
+                background-color: rgba(255, 215, 0, 0.05); color: white;
+                border: 1px solid #FFD700; padding: 8px 12px; border-radius: 5px;
+                cursor: pointer; text-align: left; font-size: 13px; font-weight: bold;
+                transition: 0.3s;
+            }
+            .bot-btn:hover { background-color: #FFD700; color: black; }
+        </style>
+
+        <div id="botBurbuja" class="bot-burbuja" onclick="alternarBot()">💬</div>
+
+        <div id="botVentana" class="bot-ventana">
+            <div class="bot-header">
+                <span>🦾 VitalBot - Asistente</span>
+                <span class="bot-cerrar" onclick="alternarBot()">&times;</span>
+            </div>
+            <div id="botCuerpo" class="bot-body">
+                <div class="bot-msg">¡Hola! Bienvenido a <b>Vital Gym</b>. ¿En qué puedo ayudarte hoy? Te guiaré mediante opciones:</div>
+                <div id="botContenedorOpciones" class="bot-opciones">
+                    </div>
+            </div>
+        </div>
+
+        <script>
+            // Abrir y cerrar la ventana flotante
+            function alternarBot() {
+                const ventana = document.getElementById("botVentana");
+                if (ventana.style.display === "none" || ventana.style.display === "") {
+                    ventana.style.display = "flex";
+                    mostrarMenuPrincipalPublico();
+                } else {
+                    ventana.style.display = "none";
+                }
+            }
+
+            // Inyectar el menú principal de botones simples
+            function mostrarMenuPrincipalPublico() {
+                const opciones = document.getElementById("botContenedorOpciones");
+                opciones.innerHTML = `
+                    <button class="bot-btn" onclick="botVerPlanes()">💪 Ver planes y ofertas vigentes</button>
+                    <button class="bot-btn" onclick="botVerUbicacion()">📍 Ver nuestra ubicación</button>
+                    <button class="bot-btn" onclick="botVerWhatsapp()">📱 Contactar por WhatsApp</button>
+                `;
+            }
+
+            // Opción 1: Consultar los planes directo de tu Base de Datos
+            async function botVerPlanes() {
+                const cuerpo = document.getElementById("botCuerpo");
+                cuerpo.innerHTML += `<div class="bot-msg" style="align-self: flex-end; background:#FFD700; color:black; border:none; border-radius: 8px 8px 0px 8px;">💪 Ver planes y ofertas vigentes</div>`;
+                
+                try {
+                    // Reutilizamos la ruta que ya tienes creada en socioRoutes.js
+                    const response = await fetch('/api/socio/planes');
+                    const planes = await response.json();
+                    
+                    let mensajePlanes = "<b>🔥 Nuestros planes actuales:</b><br><br>";
+                    planes.forEach(p => {
+                        mensajePlanes += `▪️ <b>${p.nombre}:</b> S/. ${p.precio} (Duración: ${p.duracion_meses} Meses)<br>`;
+                    });
+                    mensajePlanes += "<br>¡Inicia sesión para registrarte y contratar uno!";
+
+                    cuerpo.innerHTML += `<div class="bot-msg">${mensajePlanes}</div>`;
+                } catch (e) {
+                    cuerpo.innerHTML += `<div class="bot-msg">Lo siento, no pude cargar las tarifas en este momento.</div>`;
+                }
+                
+                inyectarBotonVolver();
+            }
+
+            // Opción 2: Ubicación estática
+            function botVerUbicacion() {
+                const cuerpo = document.getElementById("botCuerpo");
+                cuerpo.innerHTML += `<div class="bot-msg" style="align-self: flex-end; background:#FFD700; color:black; border:none; border-radius: 8px 8px 0px 8px;">📍 Ver nuestra ubicación</div>`;
+                cuerpo.innerHTML += `<div class="bot-msg">Estamos ubicados en la <b>Av. Principal El Sol 123</b> (Frente al Parque de la Juventud). ¡Ven a entrenar hoy mismo! 🏋️‍♂️</div>`;
+                inyectarBotonVolver();
+            }
+
+            // Opción 3: WhatsApp corporativo
+            function botVerWhatsapp() {
+                const cuerpo = document.getElementById("botCuerpo");
+                cuerpo.innerHTML += `<div class="bot-msg" style="align-self: flex-end; background:#FFD700; color:black; border:none; border-radius: 8px 8px 0px 8px;">📱 Contactar por WhatsApp</div>`;
+                cuerpo.innerHTML += `<div class="bot-msg">Puedes escribirnos directamente para soporte o consultas personalizadas aquí: <br><br> <a href="https://api.whatsapp.com/send?phone=51954751997" target="_blank" style="color:#FFD700; font-weight:bold;">👉 Chatear en WhatsApp</a></div>`;
+                inyectarBotonVolver();
+            }
+
+            // Botón auxiliar para regresar sin perder el hilo
+            function inyectarBotonVolver() {
+                const opciones = document.getElementById("botContenedorOpciones");
+                opciones.innerHTML = `<button class="bot-btn" style="background:#333;" onclick="mostrarMenuPrincipalPublico()">⬅️ Volver al menú principal</button>`;
+                const cuerpo = document.getElementById("botCuerpo");
+                cuerpo.scrollTop = cuerpo.scrollHeight; // Auto-scroll hacia abajo
+            }
+        </script>
 	</body>
 </html>
