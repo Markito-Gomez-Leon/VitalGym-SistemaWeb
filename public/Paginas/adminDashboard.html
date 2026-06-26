@@ -70,7 +70,7 @@
 
             <button onclick="filtrarFechas()" style="width: 100%; background: #FFD700; color: black; padding: 8px; border: none; font-weight: bold; border-radius: 4px; cursor: pointer; margin-bottom: 5px;">🔍 Filtrar</button>
             <button onclick="limpiarFiltro()" style="width: 100%; background: #555; color: white; padding: 8px; border: none; font-weight: bold; border-radius: 4px; cursor: pointer;">Borrar Filtro</button>
-        </div>
+        </div>  
         
         <div class="sidebar-footer">
             <button onclick="cerrarSesion()">Cerrar Sesión</button>
@@ -119,6 +119,9 @@
         <section id="panelPagos" class="panel">
             <div class="header-panel">
                 <h1>Caja Global</h1>
+                <button onclick="exportarExcelCaja()" style="background: #1D6F42; color: white; padding: 10px 15px; border: none; font-size: 14px; font-weight: bold; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.3s;">
+                    📊 Exportar a Excel
+                </button>
             </div>
             <table id="tablaPagosGlobales">
                 <thead>
@@ -319,6 +322,67 @@
             cargarPagosGlobales(); 
         };
 
+      // --- NUEVA FUNCIÓN: EXPORTAR CAJA A EXCEL DESDE EL DOM ---
+        window.exportarExcelCaja = () => {
+            // 1. Capturamos EXACTAMENTE lo que el usuario está viendo (respetando filtros)
+            const filas = document.querySelectorAll("#cuerpoTablaPagos tr");
+            
+            // 2. Validamos que no intente exportar tablas vacías o mensajes de error
+            if (filas.length === 0 || filas[0].innerText.includes("No hay ingresos") || filas[0].innerText.includes("Cargando") || filas[0].innerText.includes("Error")) {
+                alert("⚠️ No hay datos válidos para exportar en este momento.");
+                return;
+            }
+
+            // 3. Estructura limpia de columnas para el Excel
+            const datosParaExcel = [
+                ["Fecha y Hora", "Socio", "Plan Adquirido", "Monto Ingresado (S/.)"]
+            ];
+
+            // 4. Recorremos lo que está en pantalla y lo limpiamos
+            filas.forEach(fila => {
+                const celdas = fila.querySelectorAll("td");
+                
+                // Si es una fila normal de transacción (tiene 4 columnas)
+                if (celdas.length === 4) {
+                    const fecha = celdas[0].innerText.trim();
+                    const socio = celdas[1].innerText.trim();
+                    const plan  = celdas[2].innerText.trim();
+                    // Limpieza: Quitamos el "S/." para que Excel lo reciba como número puro sumable
+                    const monto = parseFloat(celdas[3].innerText.replace('S/.', '').trim()) || 0;
+                    
+                    datosParaExcel.push([fecha, socio, plan, monto]);
+                } 
+                // Si es la fila de TOTAL RECAUDADO (tiene 2 columnas por el colspan)
+                else if (celdas.length > 0 && celdas[0].innerText.includes("TOTAL RECAUDADO")) {
+                    const textoTotal = celdas[0].innerText.replace(':', '').trim();
+                    const celdaMonto = celdas[celdas.length - 1]; // La última celda tiene el monto
+                    const montoTotal = parseFloat(celdaMonto.innerText.replace('S/.', '').trim()) || 0;
+                    
+                    // Fila vacía de separación visual y luego el total
+                    datosParaExcel.push(["", "", "", ""]);
+                    datosParaExcel.push(["", "", textoTotal, montoTotal]);
+                }
+            });
+
+            // 5. Construimos el archivo Excel
+            const worksheet = XLSX.utils.aoa_to_sheet(datosParaExcel);
+            const workbook = XLSX.utils.book_new();
+            
+            // Le damos anchos profesionales a las columnas
+            worksheet['!cols'] = [
+                { wch: 22 }, // Ancho Fecha
+                { wch: 30 }, // Ancho Socio
+                { wch: 25 }, // Ancho Plan
+                { wch: 18 }  // Ancho Monto
+            ];
+
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Auditoría Caja");
+            
+            // 6. Descarga inmediata con fecha dinámica
+            const fechaHoy = new Date().toLocaleDateString('es-PE').replace(/\//g, '-');
+            XLSX.writeFile(workbook, `Reporte_Caja_${fechaHoy}.xlsx`);
+        };
+
         // --- 4. INICIALIZAR EVENTOS Y DATOS AL CARGAR LA PÁGINA ---
         document.addEventListener("DOMContentLoaded", async () => {
             const usuarioLocal = JSON.parse(localStorage.getItem("usuarioVitalGym"));
@@ -416,5 +480,7 @@
             });
         });
     </script>
+    // --- excel ---
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </body>
 </html>
